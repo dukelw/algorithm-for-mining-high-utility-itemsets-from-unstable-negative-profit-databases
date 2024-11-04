@@ -469,8 +469,9 @@ def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
         beta = itemset.union({i})
         
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
-        utility_beta = calculate_utility_and_dataset(beta, dataset)
+        utility_beta = calculate_utility_and_dataset(beta, sorted_dataset)
         D_beta = database_projection(dataset, list(beta))
+
         # Step 4: Check if utility of β is greater than or equal to minU
         if utility_beta >= minU:
             # Step 5: Output the β itemset
@@ -480,7 +481,7 @@ def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
                 printed_itemsets.add(beta_str)
 
         # Step 7: Calculate RSU(β, z) for all z ∈ η after i
-        primary_beta = {z for z in negative_items if rsu(beta, z, sorted_dataset) >= minU}
+        primary_beta = {z for z in negative_items if rsu(beta, z, D_beta) >= minU}
 
         # Step 10: Recursively call SearchN with updated primary items
         if primary_beta:
@@ -504,7 +505,7 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
 
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility_and_dataset(beta, dataset)
-        D_beta = database_projection(dataset, list(beta))
+        D_beta = database_projection(sorted_dataset, list(beta))
 
         # Step 4: Check if utility of β is greater than or equal to minU
         if utility_beta >= minU:
@@ -516,7 +517,7 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
 
         # Step 7: If utility of β is greater than minU, proceed with SearchN
         if utility_beta > minU:
-            searchN(negative_items, beta, sorted_dataset, minU, sorted_dataset)
+            searchN(negative_items, beta, D_beta, minU, sorted_dataset)
 
         # # Step 10: Calculate RSU(β, z) and RLU(β, z) for all z ∈ Secondary(X)
         primary_beta = set()
