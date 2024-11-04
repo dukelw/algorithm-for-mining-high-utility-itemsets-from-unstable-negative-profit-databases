@@ -1,38 +1,28 @@
-dataset = [
-    {
-        "TID": "T1",
-        "items": ["a", "b", "d", "e", "f", "g"],
-        "quantities": [2, 2, 1, 3, 2, 1],
-        "profit": [-2, 1, 4, 1, -1, -2],
-    },
-    {"TID": "T2", "items": ["b", "c"], "quantities": [1, 5], "profit": [-1, 1]},
-    {
-        "TID": "T3",
-        "items": ["b", "c", "d", "e", "f"],
-        "quantities": [2, 1, 3, 2, 1],
-        "profit": [-1, 1, 4, 1, -1],
-    },
+# Demo
+# def read_data(file_name = "table.txt"):
+#     with open(file_name, "r") as file:
+#         data = file.read()  
 
-    {
-        "TID": "T4",
-        "items": ["c", "d", "e"],
-        "quantities": [2, 1, 3],
-        "profit": [1, 4, 1],
-    },
-    {"TID": "T5", "items": ["a", "f"], "quantities": [2, 3], "profit": [2, -1]},
-    {
-        "TID": "T6",
-        "items": ["a", "b", "c", "d", "e", "f", "g"],
-        "quantities": [2, 1, 4, 2, 1, 3, 1],
-        "profit": [1, 1, 1, 4, 1, -1, -2],
-    },
-    {
-        "TID": "T7",
-        "items": ["b", "c", "e"],
-        "quantities": [3, 2, 2],
-        "profit": [1, 2, 2],
-    },
-]
+#     dataset = eval(data)
+#     return dataset
+
+# dataset = read_data()
+
+# Estimate
+import ast
+
+data = []
+def read_data(filename = "table.txt"):
+    with open(filename, 'r') as file:
+        for line in file:
+            try:
+                record = ast.literal_eval(line.strip())  # Sử dụng ast.literal_eval để chuyển đổi
+                data.append(record)
+            except (ValueError, SyntaxError) as e:
+                print(f"Đã xảy ra lỗi khi đọc dòng: {line.strip()}. Lỗi: {e}")
+    return data
+
+dataset = read_data("data.txt")
 
 # For unique printing
 printed_itemsets = set()
@@ -502,7 +492,7 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
     for i in primary_items:
         # Step 2: Create a new itemset β by adding the current primary item
         beta = set(itemset).union({i})
-
+        
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility_and_dataset(beta, dataset)
         D_beta = database_projection(sorted_dataset, list(beta))
@@ -604,4 +594,4 @@ def emhun(dataset, minU):
     print("RSU", rsus)
     search(n, X, dataset, primary, secondary, minU, sorted_dataset)
 
-emhun(dataset, minU = 25)
+emhun(dataset, minU = 500000)
