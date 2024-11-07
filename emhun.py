@@ -1,28 +1,27 @@
 # Demo
-# def read_data(file_name = "table.txt"):
-#     with open(file_name, "r") as file:
-#         data = file.read()  
+def read_data(file_name = "table.txt"):
+    with open(file_name, "r") as file:
+        data = file.read()  
 
-#     dataset = eval(data)
+    dataset = eval(data)
+    return dataset
+
+dataset = read_data()
+
+# import ast
+
+# def load_data_from_file(filename):
+#     dataset = []
+    
+#     with open(filename, 'r') as file:
+#         for line in file:
+#             transaction = ast.literal_eval(line.strip())
+#             dataset.append(transaction)
+    
 #     return dataset
 
-# dataset = read_data()
-
-# Estimate
-import ast
-
-data = []
-def read_data(filename = "table.txt"):
-    with open(filename, 'r') as file:
-        for line in file:
-            try:
-                record = ast.literal_eval(line.strip())  # Sử dụng ast.literal_eval để chuyển đổi
-                data.append(record)
-            except (ValueError, SyntaxError) as e:
-                print(f"Đã xảy ra lỗi khi đọc dòng: {line.strip()}. Lỗi: {e}")
-    return data
-
-dataset = read_data("data.txt")
+# dataset = load_data_from_file('data.txt')
+# print(dataset)
 
 # For unique printing
 printed_itemsets = set()
@@ -594,4 +593,4 @@ def emhun(dataset, minU):
     print("RSU", rsus)
     search(n, X, dataset, primary, secondary, minU, sorted_dataset)
 
-emhun(dataset, minU = 500000)
+emhun(dataset, minU = 25)
