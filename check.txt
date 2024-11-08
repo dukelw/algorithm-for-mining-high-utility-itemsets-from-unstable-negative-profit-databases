@@ -1,0 +1,38 @@
+EHMINList([
+    EHMINItem(Item: f, U: 10, PRU: 0, TI-Vector([<TID: T3, U: 10, PRU: 12>])),
+    EHMINItem(Item: a, U: 16, PRU: 0, TI-Vector([
+        <TID: T1, U: 4, PRU: 6>, 
+        <TID: T2, U: 4, PRU: 4>, 
+        <TID: T4, U: 8, PRU: 6>
+    ])),
+    EHMINItem(Item: c, U: 10, PRU: 0, TI-Vector([
+        <TID: T2, U: 4, PRU: 0>, 
+        <TID: T3, U: 3, PRU: 9>, 
+        <TID: T4, U: 3, PRU: 3>
+    ])),
+    EHMINItem(Item: d, U: 18, PRU: 0, TI-Vector([
+        <TID: T1, U: 3, PRU: 3>, 
+        <TID: T3, U: 3, PRU: 6>, 
+        <TID: T5, U: 12, PRU: 4>
+    ])),
+    EHMINItem(Item: b, U: 16, PRU: 0, TI-Vector([
+        <TID: T1, U: 3, PRU: 0>, 
+        <TID: T3, U: 6, PRU: 0>, 
+        <TID: T4, U: 3, PRU: 0>, 
+        <TID: T5, U: 4, PRU: 0>
+    ])),
+    EHMINItem(Item: g, U: -4, PRU: 0, TI-Vector([
+        <TID: T4, U: -2, PRU: 0>, 
+        <TID: T5, U: -2, PRU: 0>
+    ])),
+    EHMINItem(Item: e, U: -6, PRU: 0, TI-Vector([
+        <TID: T2, U: -2, PRU: 0>, 
+        <TID: T3, U: -3, PRU: 0>, 
+        <TID: T5, U: -1, PRU: 0>
+    ])),
+    EHMINItem(Item: h, U: -5, PRU: 0, TI-Vector([
+        <TID: T1, U: -1, PRU: 0>, 
+        <TID: T2, U: -3, PRU: 0>, 
+        <TID: T5, U: -1, PRU: 0>
+    ]))
+])
