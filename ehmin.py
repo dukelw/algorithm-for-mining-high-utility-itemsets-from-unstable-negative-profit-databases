@@ -34,14 +34,17 @@ class TIVector:
 
 class EHMINItem:
     """A class to represent an item in the EHMIN-list with its utility, PRU, and TI-vector."""
-    def __init__(self, item_name, utility=0, pru=0):
+    def __init__(self, item_name=None, utility=0, pru=0):
         self.item_name = item_name
         self.utility = utility
         self.pru = pru
-        self.ti_vector = TIVector()
+        self.ti_vector = TIVector() if item_name is not None else None
 
     def add_transaction_info(self, tid, utility, pru):
         self.ti_vector.add_transaction(tid, utility, pru)
+    
+    def set_ti_vector(self, ti_vector):
+        self.ti_vector = ti_vector
 
     def __repr__(self):
         return (f"EHMINItem(Item: {self.item_name}, U: {self.utility}, PRU: {self.pru}, "
@@ -282,157 +285,6 @@ def get_items_order(itemset, positive_items, negative_items, rtwus, supports):
     sorted_items = sorted(itemset, key=sort_key)
     return sorted_items
 
-
-def rlu(X, z, dataset):
-    """
-    Calculate the Redefined Local Utility (RLU) for an itemset X and an item z.
-    :param X: The base itemset.
-    :param z: The item to be considered for RLU with X.
-    :param dataset: The dataset containing transactions.
-    :return: The RLU value.
-    """
-    rlu_value = 0
-
-    # X union {z}
-    extended_itemset = set(X).union({z})
-    for transaction in dataset:
-        # Check if the transaction contains all items in X ∪ {z}
-        if extended_itemset.issubset(set(transaction["items"])):
-            # Calculate u(X, T_k) and rru(X, T_k)
-            # Use extended_itemset for the value of the transaction instead of X because of the definition
-            u_X = utility_of_itemset(X, transaction)
-            rru_X = redefined_remaining_utility(X, transaction)
-            # Sum them up
-            rlu_value += u_X + rru_X
-
-    return rlu_value
-
-def rsu(X, z, dataset):
-    """
-    Calculate the Redefined Sibling Utility (RSU) for an itemset X and an item z.
-    :param X: The base itemset.
-    :param z: The item to be considered for RSU with X.
-    :param dataset: The dataset containing transactions.
-    :return: The RSU value.
-    """
-    rsu_value = 0
-
-    # X union {z}
-    extended_itemset = set(X).union({z})
-
-    for transaction in dataset:
-        # Check if the transaction contains all items in X ∪ {z}
-        if extended_itemset.issubset(set(transaction["items"])):
-            # Calculate u(X, T_k), u(z, T_k), and rru(z, T_k)
-            u_X = utility_of_itemset(X, transaction)
-            u_z = utility_of_itemset([z], transaction)
-            rru_z = redefined_remaining_utility(extended_itemset, transaction)
-            rsu_value += u_X + u_z + rru_z
-
-    return rsu_value
-
-def process_and_remove_database(dataset, secondaryUnionη):
-    # Process the dataset
-    for transaction in dataset:
-        # Filter items, quantities, and profit based on secondaryUnionη
-        filtered_data = [
-            (item, qty, prof)
-            for item, qty, prof in zip(transaction["items"], transaction["quantities"], transaction["profit"])
-            if item in secondaryUnionη
-        ]
-        
-        # Unzip the filtered data back into items, quantities, and profit lists
-        transaction["items"], transaction["quantities"], transaction["profit"] = map(list, zip(*filtered_data)) if filtered_data else ([], [], [])
-
-    return dataset
-
-def sort_transaction_items(order, dataset):
-    priority = {item: i for i, item in enumerate(order)}
-
-    # Function to sort items in each transaction based on the remaining order
-    def process_transaction(transaction):
-        # Zip items with quantities and profits, then sort based on item priority
-        sorted_items = sorted(
-            zip(transaction["items"], transaction["quantities"], transaction["profit"]),
-            key=lambda x: priority.get(x[0], float('inf'))  # Use infinity if item is not in priority list
-        )
-        
-        # Separate and calculate profits as profit * quantity
-        sorted_items, quantities, profits = zip(*sorted_items)
-
-        # Update the transaction with the sorted items and calculated profits
-        return {
-            "TID": transaction["TID"],
-            "items": list(sorted_items),
-            "profit": list(profits),
-            "quantities": list(quantities)
-        }
-
-    # Process each transaction in the dataset and return the results
-    return [process_transaction(transaction) for transaction in dataset]
-
-def sort_transactions(transactions):
-    # Create a sorting key that processes the items in reverse order for comparison
-    def sort_key(transaction):
-        # Create a tuple of the items in reverse order for ASCII comparison
-        return tuple(reversed(transaction['items']))
-
-    # Sort the transactions based on the created sorting key
-    sorted_transactions = sorted(transactions, key=sort_key)
-    return sorted_transactions[::-1]
-
-def transaction_projection(transaction, itemset):
-    """
-    Project the given transaction using the specified itemset.
-    
-    :param transaction: A single transaction containing items and their quantities/profits.
-    :param itemset: The itemset used for the projection.
-    :return: A list of items that are in the transaction and come after the itemset, or an empty list if not all items are present.
-    """
-    projected_items = []
-    projected_quantity = []
-    projected_profit = []
-    itemset_items = set(itemset)  # Convert itemset to a set for quick lookups
-
-    # Check if all items in the itemset are present in the transaction
-    if itemset_items.issubset(set(transaction['items'])):
-        # Find the last index of the items in the itemset
-        last_index = -1
-        for item in transaction['items']:
-            if item in itemset_items:
-                last_index = transaction['items'].index(item)
-        
-        # Collect items after the last index of the itemset in the transaction
-        if last_index != -1:
-            projected_items = transaction['items'][last_index + 1:]
-            projected_quantity = transaction['quantities'][last_index + 1:]
-            projected_profit = transaction['profit'][last_index + 1:]
-
-    return projected_items, projected_quantity, projected_profit
-
-
-def database_projection(dataset, itemset):
-    """
-    Project the entire dataset using the specified itemset.
-    
-    :param dataset: The dataset containing all transactions.
-    :param itemset: The itemset used for projecting the database.
-    :return: A list of transactions projected by the itemset.
-    """
-    projected_dataset = []
-
-    for transaction in dataset:
-        projected_items, projected_quantity, projected_profit = transaction_projection(transaction, itemset)
-        if projected_items:  # Only add non-empty projections
-            projected_dataset.append({
-                'TID': transaction['TID'],  # Keep transaction ID
-                'items': projected_items,
-                'quantities': projected_quantity,  # Optionally keep quantities or modify
-                'profit': projected_profit,  # Optionally keep profit or modify
-            })
-
-    return projected_dataset
-
 def calculate_utility_and_dataset(itemset, dataset):
     """
     Calculate the utility of the given itemset and create the corresponding dataset Dβ.
@@ -463,156 +315,6 @@ def calculate_utility_and_dataset(itemset, dataset):
             utility += transaction_utility
     
     return utility
-
-
-def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
-    """
-    Search for high utility itemsets by appending items with negative utility to the given itemset.
-    
-    :param negative_items: Set of items with negative utility.
-    :param itemset: The current itemset being evaluated.
-    :param dataset: The dataset containing transactions.
-    :param minU: The minimum utility threshold.
-    """
-    # Step 1: Iterate through each item in the set of negative items
-    for i in negative_items:
-        # Step 2: Create a new itemset β by adding the current negative item
-        beta = itemset.union({i})
-        
-        # Step 3: Scan the dataset to calculate u(β) and create Dβ
-        utility_beta = calculate_utility_and_dataset(beta, sorted_dataset)
-        D_beta = database_projection(dataset, list(beta))
-
-        # Step 4: Check if utility of β is greater than or equal to minU
-        if utility_beta >= minU:
-            # Step 5: Output the β itemset
-            beta_str = ''.join(sorted(beta))
-            if beta_str not in printed_itemsets:
-                print(f"High utility itemset found (Negative): {beta_str}, Utility: {utility_beta}")
-                printed_itemsets.add(beta_str)
-
-        # Step 7: Calculate RSU(β, z) for all z ∈ η after i
-        primary_beta = {z for z in negative_items if rsu(beta, z, D_beta) >= minU}
-
-        # Step 10: Recursively call SearchN with updated primary items
-        if primary_beta:
-            searchN(primary_beta, beta, D_beta, minU, sorted_dataset)
-
-def search(negative_items, itemset, dataset, primary_items, secondary_items, minU, sorted_dataset):
-    """
-    Search for high utility itemsets by appending positive utility items to the given itemset.
-    
-    :param negative_items: Set of items with negative utility.
-    :param itemset: The current itemset being evaluated.
-    :param dataset: The dataset containing transactions.
-    :param primary_items: The primary items available for extension.
-    :param secondary_items: The secondary items for RLU and RSU calculations.
-    :param minU: The minimum utility threshold.
-    """
-    # Step 1: Iterate through each item in Primary(X)
-    for i in primary_items:
-        # Step 2: Create a new itemset β by adding the current primary item
-        beta = set(itemset).union({i})
-        
-        # Step 3: Scan the dataset to calculate u(β) and create Dβ
-        utility_beta = calculate_utility_and_dataset(beta, dataset)
-        D_beta = database_projection(sorted_dataset, list(beta))
-
-        # Step 4: Check if utility of β is greater than or equal to minU
-        if utility_beta >= minU:
-            # Step 5: Output the β itemset
-            beta_str = ''.join(sorted(beta))
-            if beta_str not in printed_itemsets:
-                print(f"High utility itemset found (Negative): {beta_str}, Utility: {utility_beta}")
-                printed_itemsets.add(beta_str)
-
-        # Step 7: If utility of β is greater than minU, proceed with SearchN
-        if utility_beta > minU:
-            searchN(negative_items, beta, D_beta, minU, sorted_dataset)
-
-        # # Step 10: Calculate RSU(β, z) and RLU(β, z) for all z ∈ Secondary(X)
-        primary_beta = set()
-        secondary_beta = set()
-        for z in secondary_items:
-            if z == i:
-                continue
-            rsu_value = rsu(beta, z, sorted_dataset)
-            rlu_value = rlu(beta, z, sorted_dataset)
-
-            # Step 11: Update Primary(β) based on RSU threshold
-            if rsu_value >= minU:
-                primary_beta = primary_beta.union({z})
-
-            # Step 12: Update Secondary(β) based on RLU threshold
-            if rlu_value >= minU:
-                secondary_beta = secondary_beta.union({z})        
-
-        # # Step 13: Recursive search call with updated β, dataset Dβ, primary and secondary items
-        search(negative_items, beta, sorted_dataset, primary_beta, secondary_beta, minU, sorted_dataset)
-
-def emhun(dataset, minU):
-    X = []
-
-    # Step 2-4: Identify p, s, and n
-    ρ, η, δ = categorize_items(dataset)
-
-    # Display results for the sets
-    print("Positive Utility Only Items (ρ):", ρ)
-    print("Negative Utility Only Items (η):", η)
-    print("Mixed Utility Items (δ):", δ)
-    
-    # Step 5: Scan D to calculate RLU(X, i) for all item i ∈ ( ∪ ), using UA;
-    secondary = set()
-    rtwus = {}
-    rlus = {}
-    ρδunion = ρ | δ
-    for i in ρδunion:
-        rlu_value = rlu(X, i, dataset)
-        iset = []
-        iset.append(i)
-        rtwu_value = calculate_rtwu(iset, dataset)
-        rtwus[i] = rtwu_value
-        if rlu_value >= minU:
-            rlus[i] = rlu_value
-            secondary.add(i)
-    print("Secondary", secondary)
-    
-    # Step 7: The algorithm then sorts the elements into the order defined in Definition 7
-    secondaryUnionη = secondary | η
-    print("Secondary union η", secondaryUnionη)
-    sorted_secondaryUnionη = get_items_order(secondaryUnionη, ρ, δ, η)
-    print("Sorted secondary union η", sorted_secondaryUnionη)
-
-    # Step 8: Scan D to remove item x not in (Secondary(X) ∪ η);
-    removed_dataset = process_and_remove_database(dataset, secondaryUnionη)
-
-    # Step 9: Sort the items in the remaining transactions in the order of items with positive utility only, items with both negative and positive utility, items with negative utility only;
-    p, n, s = categorize_items(removed_dataset)
-    remaining_transaction_sort_order = get_items_order(secondaryUnionη, p, s, n)
-    print("Remaining transactions sort order: ", remaining_transaction_sort_order)
-    sorted_item_dataset = sort_transaction_items(remaining_transaction_sort_order, dataset)
-    print(sorted_item_dataset)
-    
-    # Step 10: Sort transactions in the database D
-    # Sort the transactions based on the given rules
-    sorted_dataset = sort_transactions(sorted_item_dataset)
-    for transaction in sorted_dataset:
-        print(transaction)
-    
-    # Step 11 and 12: Calculate RSU and Primary(X)
-    primary = set()
-    rsus = {}
-    for i in secondary:
-        rsu_value = rsu(X, i, sorted_dataset)
-        iset = []
-        iset.append(i)
-        rsus[i] = rsu_value
-        if rsu_value >= minU:
-            primary.add(i)
-    primary = get_items_order(primary, ρ, δ, η)
-    print("Primary", primary)
-    print("RSU", rsus)
-    search(n, X, dataset, primary, secondary, minU, sorted_dataset)
 
 def calculate_pu(pattern, transaction, positive_items):
     """
@@ -682,6 +384,198 @@ def calculate_pru(itemset, dataset):
             pru += pru_x_tk
 
     return pru
+
+# def ehmin_combine(Uk, Ul, pfutils, minU):
+#     """
+#     Combine two EHMIN-lists (Uk, Ul) and create a new conditional EHMIN-list.
+#     Args:
+#         Uk: EHMIN-list for item Uk
+#         Ul: EHMIN-list for item Ul
+#         pfutils: Prefix utility map containing transaction IDs and their utilities
+
+#     Returns:
+#         A new EHMIN-list C if conditions are met, otherwise None
+#     """
+
+#     # Initialize the conditional utility pattern list C
+#     C = EHMINItem(Ul.item_name, Ul.utility, Ul.pru)
+#     C.set_ti_vector(Ul.ti_vector)
+#     x = Uk.utility + Uk.pru
+#     y = Uk.utility
+#     print("C sau khi khoi tao Ul in combine", C)
+
+#     # Initialize iterators for the utility vectors of Uk and Ul
+#     current_k = 0
+#     current_l = 0
+
+#     # Get length of vector
+#     lenght_k = len(Uk.ti_vector.transactions)
+#     lenght_l = len(Ul.ti_vector.transactions)
+    
+#     while current_k < lenght_k and current_l < lenght_l:
+#         sk = Uk.ti_vector.transactions[current_k]
+#         sl = Ul.ti_vector.transactions[current_l]
+#         print("Sk", sk)
+#         print("Sl", sl)
+#         if sk.tid == sl.tid:
+#             # Retrieve the prefix utility (if exists)
+#             pfutil = pfutils.get(sk.tid)
+#             print("Pfutil", pfutil)
+#             if pfutil is None:
+#                 pfutil = 0
+            
+#             # Calculate the combined utility and remaining utility
+#             util = sk.utility + sl.utility - pfutil
+#             rutil = min(sk.pru, sl.pru)
+
+#             # Add the combined values to the new EHMIN-list C
+#             # Insert values into Ui.Tk vector
+#             C.add_transaction_info(sk.tid, utility=util, pru=rutil)
+            
+#             y += sl.utility - pfutil
+            
+#             # N-Prune condition
+#             if sk.pru == 0 and y < minU:
+#                 return None
+
+#             # Move both iterators forward
+#             current_k += 1
+#             current_l += 1
+#         elif sk.tid > sl.tid:
+#             # Move iterator sl forward
+#             current_l += 1
+#         else:
+#             # LA-Prune condition
+#             x -= sk.utility + sk.pru
+#             if x < minU:
+#                 return None
+            
+#             # Move iterator sk forward
+#             current_k += 1
+
+#     if len(C.ti_vector.transactions) == 0:
+#         return None
+    
+#     return C
+
+def ehmin_combine(Uk, Ul, pfutils, minU):
+    """
+    Combine two EHMIN-lists (Uk, Ul) and create a new conditional EHMIN-list.
+    Args:
+        Uk: EHMIN-list for item Uk
+        Ul: EHMIN-list for item Ul
+        pfutils: Prefix utility map containing transaction IDs and their utilities
+        minU: Minimum utility threshold for pruning
+
+    Returns:
+        A new EHMIN-list C if conditions are met, otherwise None
+    """
+    # Initialize the conditional utility pattern list C
+    C = EHMINItem(Ul.item_name, 0, Ul.pru)
+    # C.set_ti_vector(Ul.ti_vector)  # Start with Ul's transaction info
+    x = Uk.utility + Uk.pru
+    y = Uk.utility
+
+    # Initialize iterators for the utility vectors of Uk and Ul
+    current_k = 0
+    current_l = 0
+
+    # Get the lengths of utility vectors
+    length_k = len(Uk.ti_vector.transactions)
+    length_l = len(Ul.ti_vector.transactions)
+
+    while current_k < length_k and current_l < length_l:
+        sk = Uk.ti_vector.transactions[current_k]
+        sl = Ul.ti_vector.transactions[current_l]
+
+        if sk.tid == sl.tid:
+            # Retrieve the prefix utility for the shared transaction ID
+            pfutil = pfutils.get(sk.tid, 0)
+            
+            # Calculate the combined utility and remaining utility
+            util = sk.utility + sl.utility - pfutil
+            rutil = min(sk.pru, sl.pru)
+
+            # Add the combined transaction to C
+            C.add_transaction_info(sk.tid, utility=util, pru=rutil)
+            C.utility += util
+            
+            # Update the `y` value for pruning
+            y += sl.utility - pfutil
+            print("sl", sl, "sk", sk, "Uk", Uk, "Ul", Ul, "y", y)
+
+            # N-Prune condition
+            if sk.pru == 0 and y < minU:
+                print("N-Prune activated: returning None 1")
+                return None
+
+            # Move both iterators forward
+            current_k += 1
+            current_l += 1
+        elif sk.tid > sl.tid:
+            # Move iterator for Ul forward
+            current_l += 1
+        else:
+            # LA-Prune condition: check if further processing is beneficial
+            x -= (sk.utility + sk.pru)
+            if x < minU:
+                print("LA-Prune activated: returning None 2")
+                return None
+            
+            # Move iterator for Uk forward
+            current_k += 1
+
+    if len(C.ti_vector.transactions) == 0:
+        print("No valid transactions in C after combining.")
+        return None
+
+    print("Successfully created combined item:", C)
+    return C
+
+
+def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
+    # Initialize the prefix utility map
+    pfutils = {}
+    if P.item_name != None:
+        for s in P.ti_vector.transactions:
+            pfutils[s.tid] = s.utility
+    print("Call EHMIN pref is", pref, "P is", P, "pfutils is", pfutils)
+
+    # Iterate over each Uk in UL
+    for Uk in UL.items.values():
+        # First pruning condition (U ≥ minUtil)
+        print("k is", Uk.item_name, "Uk utility", Uk.utility, "minU", minU)
+        if Uk.utility >= minU:
+            tmp = pref.union({Uk.item_name})
+            print("tmp", tmp)
+            HUP[''.join(tmp)] = Uk.utility
+            
+            print("HUP append", ''.join(tmp))
+            print("HUP", HUP)
+
+        # Second pruning condition (U + PRU ≥ minUtil)
+        if Uk.utility + Uk.pru >= minU:
+            # Initialize the conditional EHMIN-lists, CL
+            CL = EHMINList()
+
+            # Iterate over each Ul in UL where l > k
+            for Ul in UL.items.values():
+                k = sorted_item.index(Uk.item_name) + 1
+                l = sorted_item.index(Ul.item_name)
+                if k <= l:  # Ensure l > k
+                    # EUCS pruning condition
+                        print("eucs",Uk.item_name, Ul.item_name, k, l, eucs[l][k])
+                        if eucs[l][k] >= minU:
+                            C = ehmin_combine(Uk, Ul, pfutils, minU)
+                            print("C after combine", C)
+                            if C:
+                                print("Into C to CL")
+                                CL.items[C.item_name] = C
+
+            # Recursive call to EHMIN_Mine if CL is non-empty
+            if len(CL.items) > 0:
+                print("Recursive call to EHMIN_Mine", "Uk", Uk, "CL", CL, "pref", pref | {Uk.item_name})
+                ehmin_mine(Uk, CL, pref | {Uk.item_name}, eucs, minU, sorted_item)
 
 def ehmin(δ):
     # Step 1: 1st Database Scan
@@ -755,11 +649,26 @@ def ehmin(δ):
 
         # Calculate EUCS[v_ik, v_jk] with PTU_k
         eucs = build_eucs(sorted_item)
+        # for line in eucs:
+        #     print(line)
+        # return
 
     print("After 2nd scan", ehmin_list)
+    test_list = EHMINList()
+    a = test_list.find_or_create("a", 16, 16)
+    a.set_ti_vector(ehmin_list.find_or_create('a').ti_vector)
+    c = test_list.find_or_create("c", 10, 12)
+    c.set_ti_vector(ehmin_list.find_or_create('c').ti_vector)    
+    b = test_list.find_or_create("b", 16, 0)
+    b.set_ti_vector(ehmin_list.find_or_create('b').ti_vector)
+    
     # Step 3: Mining
-    HUP = {}
+    ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
+    for item in HUP:
+        print(item, "-", HUP[item])
+    return HUP
 
 # Create an empty EHMINList
+HUP = {}
 ehmin_list = EHMINList()
 ehmin(0.2)
