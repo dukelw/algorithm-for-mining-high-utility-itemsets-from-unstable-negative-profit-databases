@@ -466,7 +466,7 @@ def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
             # Step 5: Output the β itemset
             beta_str = ''.join(sorted(beta))
             if beta_str not in printed_itemsets:
-                print(f"High utility itemset found (Negative): {beta_str}, Utility: {utility_beta}")
+                print(f"{beta_str} - {utility_beta}")
                 printed_itemsets.add(beta_str)
 
         # Step 7: Calculate RSU(β, z) for all z ∈ η after i
@@ -501,14 +501,14 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
             # Step 5: Output the β itemset
             beta_str = ''.join(sorted(beta))
             if beta_str not in printed_itemsets:
-                print(f"High utility itemset found (Negative): {beta_str}, Utility: {utility_beta}")
+                print(f"{beta_str} - {utility_beta}")
                 printed_itemsets.add(beta_str)
 
         # Step 7: If utility of β is greater than minU, proceed with SearchN
         if utility_beta > minU:
             searchN(negative_items, beta, D_beta, minU, sorted_dataset)
 
-        # # Step 10: Calculate RSU(β, z) and RLU(β, z) for all z ∈ Secondary(X)
+        # Step 10: Calculate RSU(β, z) and RLU(β, z) for all z ∈ Secondary(X)
         primary_beta = set()
         secondary_beta = set()
         for z in secondary_items:
@@ -523,9 +523,9 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
 
             # Step 12: Update Secondary(β) based on RLU threshold
             if rlu_value >= minU:
-                secondary_beta = secondary_beta.union({z})        
+                secondary_beta = secondary_beta.union({z})    
 
-        # # Step 13: Recursive search call with updated β, dataset Dβ, primary and secondary items
+        # Step 13: Recursive search call with updated β, dataset Dβ, primary and secondary items
         search(negative_items, beta, sorted_dataset, primary_beta, secondary_beta, minU, sorted_dataset)
 
 def emhun(dataset, minU):

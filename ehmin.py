@@ -385,79 +385,6 @@ def calculate_pru(itemset, dataset):
 
     return pru
 
-# def ehmin_combine(Uk, Ul, pfutils, minU):
-#     """
-#     Combine two EHMIN-lists (Uk, Ul) and create a new conditional EHMIN-list.
-#     Args:
-#         Uk: EHMIN-list for item Uk
-#         Ul: EHMIN-list for item Ul
-#         pfutils: Prefix utility map containing transaction IDs and their utilities
-
-#     Returns:
-#         A new EHMIN-list C if conditions are met, otherwise None
-#     """
-
-#     # Initialize the conditional utility pattern list C
-#     C = EHMINItem(Ul.item_name, Ul.utility, Ul.pru)
-#     C.set_ti_vector(Ul.ti_vector)
-#     x = Uk.utility + Uk.pru
-#     y = Uk.utility
-#     print("C sau khi khoi tao Ul in combine", C)
-
-#     # Initialize iterators for the utility vectors of Uk and Ul
-#     current_k = 0
-#     current_l = 0
-
-#     # Get length of vector
-#     lenght_k = len(Uk.ti_vector.transactions)
-#     lenght_l = len(Ul.ti_vector.transactions)
-    
-#     while current_k < lenght_k and current_l < lenght_l:
-#         sk = Uk.ti_vector.transactions[current_k]
-#         sl = Ul.ti_vector.transactions[current_l]
-#         print("Sk", sk)
-#         print("Sl", sl)
-#         if sk.tid == sl.tid:
-#             # Retrieve the prefix utility (if exists)
-#             pfutil = pfutils.get(sk.tid)
-#             print("Pfutil", pfutil)
-#             if pfutil is None:
-#                 pfutil = 0
-            
-#             # Calculate the combined utility and remaining utility
-#             util = sk.utility + sl.utility - pfutil
-#             rutil = min(sk.pru, sl.pru)
-
-#             # Add the combined values to the new EHMIN-list C
-#             # Insert values into Ui.Tk vector
-#             C.add_transaction_info(sk.tid, utility=util, pru=rutil)
-            
-#             y += sl.utility - pfutil
-            
-#             # N-Prune condition
-#             if sk.pru == 0 and y < minU:
-#                 return None
-
-#             # Move both iterators forward
-#             current_k += 1
-#             current_l += 1
-#         elif sk.tid > sl.tid:
-#             # Move iterator sl forward
-#             current_l += 1
-#         else:
-#             # LA-Prune condition
-#             x -= sk.utility + sk.pru
-#             if x < minU:
-#                 return None
-            
-#             # Move iterator sk forward
-#             current_k += 1
-
-#     if len(C.ti_vector.transactions) == 0:
-#         return None
-    
-#     return C
-
 def ehmin_combine(Uk, Ul, pfutils, minU):
     """
     Combine two EHMIN-lists (Uk, Ul) and create a new conditional EHMIN-list.
@@ -502,11 +429,9 @@ def ehmin_combine(Uk, Ul, pfutils, minU):
             
             # Update the `y` value for pruning
             y += sl.utility - pfutil
-            print("sl", sl, "sk", sk, "Uk", Uk, "Ul", Ul, "y", y)
 
             # N-Prune condition
             if sk.pru == 0 and y < minU:
-                print("N-Prune activated: returning None 1")
                 return None
 
             # Move both iterators forward
@@ -519,17 +444,14 @@ def ehmin_combine(Uk, Ul, pfutils, minU):
             # LA-Prune condition: check if further processing is beneficial
             x -= (sk.utility + sk.pru)
             if x < minU:
-                print("LA-Prune activated: returning None 2")
                 return None
             
             # Move iterator for Uk forward
             current_k += 1
 
     if len(C.ti_vector.transactions) == 0:
-        print("No valid transactions in C after combining.")
         return None
 
-    print("Successfully created combined item:", C)
     return C
 
 
@@ -539,19 +461,13 @@ def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
     if P.item_name != None:
         for s in P.ti_vector.transactions:
             pfutils[s.tid] = s.utility
-    print("Call EHMIN pref is", pref, "P is", P, "pfutils is", pfutils)
 
     # Iterate over each Uk in UL
     for Uk in UL.items.values():
         # First pruning condition (U ≥ minUtil)
-        print("k is", Uk.item_name, "Uk utility", Uk.utility, "minU", minU)
         if Uk.utility >= minU:
             tmp = pref.union({Uk.item_name})
-            print("tmp", tmp)
             HUP[''.join(tmp)] = Uk.utility
-            
-            print("HUP append", ''.join(tmp))
-            print("HUP", HUP)
 
         # Second pruning condition (U + PRU ≥ minUtil)
         if Uk.utility + Uk.pru >= minU:
@@ -564,22 +480,17 @@ def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
                 l = sorted_item.index(Ul.item_name)
                 if k <= l:  # Ensure l > k
                     # EUCS pruning condition
-                        print("eucs",Uk.item_name, Ul.item_name, k, l, eucs[l][k])
                         if eucs[l][k] >= minU:
                             C = ehmin_combine(Uk, Ul, pfutils, minU)
-                            print("C after combine", C)
                             if C:
-                                print("Into C to CL")
                                 CL.items[C.item_name] = C
 
             # Recursive call to EHMIN_Mine if CL is non-empty
             if len(CL.items) > 0:
-                print("Recursive call to EHMIN_Mine", "Uk", Uk, "CL", CL, "pref", pref | {Uk.item_name})
                 ehmin_mine(Uk, CL, pref | {Uk.item_name}, eucs, minU, sorted_item)
 
 def ehmin(δ):
     # Step 1: 1st Database Scan
-    print(dataset)
     # Calculate PTWU (RTWU)
     ptwus, supports = calculate_ptwus(dataset)
     ptus = {}
@@ -654,13 +565,6 @@ def ehmin(δ):
         # return
 
     print("After 2nd scan", ehmin_list)
-    test_list = EHMINList()
-    a = test_list.find_or_create("a", 16, 16)
-    a.set_ti_vector(ehmin_list.find_or_create('a').ti_vector)
-    c = test_list.find_or_create("c", 10, 12)
-    c.set_ti_vector(ehmin_list.find_or_create('c').ti_vector)    
-    b = test_list.find_or_create("b", 16, 0)
-    b.set_ti_vector(ehmin_list.find_or_create('b').ti_vector)
     
     # Step 3: Mining
     ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
