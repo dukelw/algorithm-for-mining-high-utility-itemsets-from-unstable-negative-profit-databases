@@ -1,10 +1,11 @@
 # Demo
-def read_data(file_name = "table.txt"):
+def read_data(file_name="table.txt"):
     with open(file_name, "r") as file:
-        data = file.read()  
+        data = file.read()
 
     dataset = eval(data)
     return dataset
+
 
 dataset = read_data()
 
@@ -12,12 +13,12 @@ dataset = read_data()
 
 # def load_data_from_file(filename):
 #     dataset = []
-    
+
 #     with open(filename, 'r') as file:
 #         for line in file:
 #             transaction = ast.literal_eval(line.strip())
 #             dataset.append(transaction)
-    
+
 #     return dataset
 
 # dataset = load_data_from_file('data.txt')
@@ -25,6 +26,7 @@ dataset = read_data()
 
 # For unique printing
 printed_itemsets = set()
+
 
 def utility_of_itemset(itemset, transaction):
     """
@@ -39,6 +41,7 @@ def utility_of_itemset(itemset, transaction):
             idx = transaction["items"].index(item)
             utility += transaction["quantities"][idx] * transaction["profit"][idx]
     return utility
+
 
 def transaction_utility(transaction):
     """
@@ -80,6 +83,7 @@ def calculate_rtwu(itemset, dataset):
             RTWU += redefine_transaction_utility(transaction)
     return RTWU
 
+
 def transaction_weight_utility(itemset, dataset):
     """
     Calculate the Transaction Weight Utility (TWU) for an itemset in the dataset.
@@ -119,14 +123,18 @@ def remaining_utility(itemset, transaction):
     """
     ru = 0
     # Get the last index in the sorted transaction where itemset items appear
-    max_idx = max(transaction["items"].index(item) for item in itemset if item in transaction["items"])
-    
+    max_idx = max(
+        transaction["items"].index(item)
+        for item in itemset
+        if item in transaction["items"]
+    )
+
     # Sum the utility of items appearing after the itemset in the transaction
     for i in range(max_idx + 1, len(transaction["items"])):
         quantity = transaction["quantities"][i]
         profit = transaction["profit"][i]
         ru += quantity * profit
-    
+
     return ru
 
 
@@ -138,23 +146,23 @@ def redefined_remaining_utility(itemset, transaction):
     :return: Redefined remaining utility of the itemset in the transaction.
     """
     rru = 0
-    
+
     # Lọc ra những item trong itemset mà có trong transaction["items"]
     valid_items = [item for item in itemset if item in transaction["items"]]
-    
+
     # In case item set is an empty set, rru is an empty set
-    if (len(itemset) == 0):
+    if len(itemset) == 0:
         for i in range(0, len(transaction["items"])):
             quantity = transaction["quantities"][i]
             profit = transaction["profit"][i]
             if profit > 0:  # Only consider items with positive profit
                 rru += quantity * profit
         return rru
-    
+
     # Nếu không có item nào hợp lệ, trả về 0
     if not valid_items:
         return rru
-    
+
     # Get the last index in the sorted transaction where itemset items appear
     max_idx = max(transaction["items"].index(item) for item in valid_items)
     # Sum the utility of items appearing after the itemset with positive profit
@@ -163,8 +171,9 @@ def redefined_remaining_utility(itemset, transaction):
         profit = transaction["profit"][i]
         if profit > 0:  # Only consider items with positive profit
             rru += quantity * profit
-    
+
     return rru
+
 
 def calculate_utilities(dataset):
     """
@@ -193,6 +202,7 @@ def calculate_utilities(dataset):
             mixed_items.add(item)
 
     return positive_items, negative_items, mixed_items
+
 
 def categorize_items(dataset):
     """
@@ -257,10 +267,11 @@ def get_items_order(itemset, positive_items, hybrid_items, negative_items):
             priority = 3
         else:
             priority = 4
-        return (priority, rtwus.get(item, float('inf')))  
+        return (priority, rtwus.get(item, float("inf")))
 
     sorted_items = sorted(itemset, key=sort_key)
     return sorted_items
+
 
 def rlu(X, z, dataset):
     """
@@ -286,6 +297,7 @@ def rlu(X, z, dataset):
 
     return rlu_value
 
+
 def rsu(X, z, dataset):
     """
     Calculate the Redefined Sibling Utility (RSU) for an itemset X and an item z.
@@ -310,20 +322,26 @@ def rsu(X, z, dataset):
 
     return rsu_value
 
+
 def process_and_remove_database(dataset, secondaryUnionη):
     # Process the dataset
     for transaction in dataset:
         # Filter items, quantities, and profit based on secondaryUnionη
         filtered_data = [
             (item, qty, prof)
-            for item, qty, prof in zip(transaction["items"], transaction["quantities"], transaction["profit"])
+            for item, qty, prof in zip(
+                transaction["items"], transaction["quantities"], transaction["profit"]
+            )
             if item in secondaryUnionη
         ]
-        
+
         # Unzip the filtered data back into items, quantities, and profit lists
-        transaction["items"], transaction["quantities"], transaction["profit"] = map(list, zip(*filtered_data)) if filtered_data else ([], [], [])
+        transaction["items"], transaction["quantities"], transaction["profit"] = (
+            map(list, zip(*filtered_data)) if filtered_data else ([], [], [])
+        )
 
     return dataset
+
 
 def sort_transaction_items(order, dataset):
     priority = {item: i for i, item in enumerate(order)}
@@ -333,9 +351,11 @@ def sort_transaction_items(order, dataset):
         # Zip items with quantities and profits, then sort based on item priority
         sorted_items = sorted(
             zip(transaction["items"], transaction["quantities"], transaction["profit"]),
-            key=lambda x: priority.get(x[0], float('inf'))  # Use infinity if item is not in priority list
+            key=lambda x: priority.get(
+                x[0], float("inf")
+            ),  # Use infinity if item is not in priority list
         )
-        
+
         # Separate and calculate profits as profit * quantity
         sorted_items, quantities, profits = zip(*sorted_items)
 
@@ -344,26 +364,28 @@ def sort_transaction_items(order, dataset):
             "TID": transaction["TID"],
             "items": list(sorted_items),
             "profit": list(profits),
-            "quantities": list(quantities)
+            "quantities": list(quantities),
         }
 
     # Process each transaction in the dataset and return the results
     return [process_transaction(transaction) for transaction in dataset]
 
+
 def sort_transactions(transactions):
     # Create a sorting key that processes the items in reverse order for comparison
     def sort_key(transaction):
         # Create a tuple of the items in reverse order for ASCII comparison
-        return tuple(reversed(transaction['items']))
+        return tuple(reversed(transaction["items"]))
 
     # Sort the transactions based on the created sorting key
     sorted_transactions = sorted(transactions, key=sort_key)
     return sorted_transactions[::-1]
 
+
 def transaction_projection(transaction, itemset):
     """
     Project the given transaction using the specified itemset.
-    
+
     :param transaction: A single transaction containing items and their quantities/profits.
     :param itemset: The itemset used for the projection.
     :return: A list of items that are in the transaction and come after the itemset, or an empty list if not all items are present.
@@ -374,18 +396,18 @@ def transaction_projection(transaction, itemset):
     itemset_items = set(itemset)  # Convert itemset to a set for quick lookups
 
     # Check if all items in the itemset are present in the transaction
-    if itemset_items.issubset(set(transaction['items'])):
+    if itemset_items.issubset(set(transaction["items"])):
         # Find the last index of the items in the itemset
         last_index = -1
-        for item in transaction['items']:
+        for item in transaction["items"]:
             if item in itemset_items:
-                last_index = transaction['items'].index(item)
-        
+                last_index = transaction["items"].index(item)
+
         # Collect items after the last index of the itemset in the transaction
         if last_index != -1:
-            projected_items = transaction['items'][last_index + 1:]
-            projected_quantity = transaction['quantities'][last_index + 1:]
-            projected_profit = transaction['profit'][last_index + 1:]
+            projected_items = transaction["items"][last_index + 1 :]
+            projected_quantity = transaction["quantities"][last_index + 1 :]
+            projected_profit = transaction["profit"][last_index + 1 :]
 
     return projected_items, projected_quantity, projected_profit
 
@@ -393,7 +415,7 @@ def transaction_projection(transaction, itemset):
 def database_projection(dataset, itemset):
     """
     Project the entire dataset using the specified itemset.
-    
+
     :param dataset: The dataset containing all transactions.
     :param itemset: The itemset used for projecting the database.
     :return: A list of transactions projected by the itemset.
@@ -401,52 +423,57 @@ def database_projection(dataset, itemset):
     projected_dataset = []
 
     for transaction in dataset:
-        projected_items, projected_quantity, projected_profit = transaction_projection(transaction, itemset)
+        projected_items, projected_quantity, projected_profit = transaction_projection(
+            transaction, itemset
+        )
         if projected_items:  # Only add non-empty projections
-            projected_dataset.append({
-                'TID': transaction['TID'],  # Keep transaction ID
-                'items': projected_items,
-                'quantities': projected_quantity,  # Optionally keep quantities or modify
-                'profit': projected_profit,  # Optionally keep profit or modify
-            })
+            projected_dataset.append(
+                {
+                    "TID": transaction["TID"],  # Keep transaction ID
+                    "items": projected_items,
+                    "quantities": projected_quantity,  # Optionally keep quantities or modify
+                    "profit": projected_profit,  # Optionally keep profit or modify
+                }
+            )
 
     return projected_dataset
+
 
 def calculate_utility_and_dataset(itemset, dataset):
     """
     Calculate the utility of the given itemset and create the corresponding dataset Dβ.
-    
+
     :param itemset: The itemset for which utility is to be calculated.
     :param dataset: The dataset containing transactions.
     :return: A tuple containing the total utility and the filtered dataset.
     """
     utility = 0
-    
+
     for transaction in dataset:
         # Convert the itemset to a set for easier subset checking
         itemset_set = set(itemset)
-        
+
         # Check if the itemset is a subset of the transaction's items
-        if itemset_set.issubset(set(transaction['items'])):
+        if itemset_set.issubset(set(transaction["items"])):
             # Calculate utility for this transaction
             transaction_utility = 0
-            
+
             # Calculate utility based on profit and quantities
-            for item, quantity in zip(transaction['items'], transaction['quantities']):
+            for item, quantity in zip(transaction["items"], transaction["quantities"]):
                 if item in itemset_set:
-                    index = transaction['items'].index(item)
-                    profit = transaction['profit'][index]
+                    index = transaction["items"].index(item)
+                    profit = transaction["profit"][index]
                     transaction_utility += profit * quantity
-            
+
             utility += transaction_utility
-    
+
     return utility
 
 
 def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
     """
     Search for high utility itemsets by appending items with negative utility to the given itemset.
-    
+
     :param negative_items: Set of items with negative utility.
     :param itemset: The current itemset being evaluated.
     :param dataset: The dataset containing transactions.
@@ -456,7 +483,7 @@ def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
     for i in negative_items:
         # Step 2: Create a new itemset β by adding the current negative item
         beta = itemset.union({i})
-        
+
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility_and_dataset(beta, sorted_dataset)
         D_beta = database_projection(dataset, list(beta))
@@ -464,7 +491,7 @@ def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
         # Step 4: Check if utility of β is greater than or equal to minU
         if utility_beta >= minU:
             # Step 5: Output the β itemset
-            beta_str = ''.join(sorted(beta))
+            beta_str = "".join(sorted(beta))
             if beta_str not in printed_itemsets:
                 print(f"{beta_str} - {utility_beta}")
                 printed_itemsets.add(beta_str)
@@ -476,10 +503,19 @@ def searchN(negative_items, itemset, dataset, minU, sorted_dataset):
         if primary_beta:
             searchN(primary_beta, beta, D_beta, minU, sorted_dataset)
 
-def search(negative_items, itemset, dataset, primary_items, secondary_items, minU, sorted_dataset):
+
+def search(
+    negative_items,
+    itemset,
+    dataset,
+    primary_items,
+    secondary_items,
+    minU,
+    sorted_dataset,
+):
     """
     Search for high utility itemsets by appending positive utility items to the given itemset.
-    
+
     :param negative_items: Set of items with negative utility.
     :param itemset: The current itemset being evaluated.
     :param dataset: The dataset containing transactions.
@@ -491,7 +527,7 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
     for i in primary_items:
         # Step 2: Create a new itemset β by adding the current primary item
         beta = set(itemset).union({i})
-        
+
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility_and_dataset(beta, dataset)
         D_beta = database_projection(sorted_dataset, list(beta))
@@ -499,7 +535,7 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
         # Step 4: Check if utility of β is greater than or equal to minU
         if utility_beta >= minU:
             # Step 5: Output the β itemset
-            beta_str = ''.join(sorted(beta))
+            beta_str = "".join(sorted(beta))
             if beta_str not in printed_itemsets:
                 print(f"{beta_str} - {utility_beta}")
                 printed_itemsets.add(beta_str)
@@ -523,10 +559,19 @@ def search(negative_items, itemset, dataset, primary_items, secondary_items, min
 
             # Step 12: Update Secondary(β) based on RLU threshold
             if rlu_value >= minU:
-                secondary_beta = secondary_beta.union({z})    
+                secondary_beta = secondary_beta.union({z})
 
         # Step 13: Recursive search call with updated β, dataset Dβ, primary and secondary items
-        search(negative_items, beta, sorted_dataset, primary_beta, secondary_beta, minU, sorted_dataset)
+        search(
+            negative_items,
+            beta,
+            sorted_dataset,
+            primary_beta,
+            secondary_beta,
+            minU,
+            sorted_dataset,
+        )
+
 
 def emhun(dataset, minU):
     # Step 1: Initialize
@@ -539,7 +584,7 @@ def emhun(dataset, minU):
     print("Positive Utility Only Items (ρ):", ρ)
     print("Negative Utility Only Items (η):", η)
     print("Mixed Utility Items (δ):", δ)
-    
+
     # Step 5: Scan D to calculate RLU(X, i) for all item i ∈ ( ∪ ), using UA;
     secondary = set()
     rtwus = {}
@@ -555,7 +600,7 @@ def emhun(dataset, minU):
             rlus[i] = rlu_value
             secondary.add(i)
     print("Secondary", secondary)
-    
+
     # Step 7: The algorithm then sorts the elements into the order defined in Definition 7
     secondaryUnionη = secondary | η
     print("Secondary union η", secondaryUnionη)
@@ -569,15 +614,17 @@ def emhun(dataset, minU):
     p, n, s = calculate_utilities(removed_dataset)
     remaining_transaction_sort_order = get_items_order(secondaryUnionη, p, s, n)
     print("Remaining transactions sort order: ", remaining_transaction_sort_order)
-    sorted_item_dataset = sort_transaction_items(remaining_transaction_sort_order, dataset)
+    sorted_item_dataset = sort_transaction_items(
+        remaining_transaction_sort_order, dataset
+    )
     print(sorted_item_dataset)
-    
+
     # Step 10: Sort transactions in the database D
     # Sort the transactions based on the given rules
     sorted_dataset = sort_transactions(sorted_item_dataset)
     for transaction in sorted_dataset:
         print(transaction)
-    
+
     # Step 11 and 12: Calculate RSU and Primary(X)
     primary = set()
     rsus = {}
@@ -593,4 +640,5 @@ def emhun(dataset, minU):
     print("RSU", rsus)
     search(n, X, dataset, primary, secondary, minU, sorted_dataset)
 
-emhun(dataset, minU = 25)
+
+emhun(dataset, minU=25)

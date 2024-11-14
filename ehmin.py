@@ -1,18 +1,21 @@
 # Demo
-def read_data(file_name = "ehmintable.txt"):
+def read_data(file_name="ehmintable.txt"):
     with open(file_name, "r") as file:
-        data = file.read()  
+        data = file.read()
 
     dataset = eval(data)
     return dataset
+
 
 dataset = read_data()
 
 # For unique printing
 printed_itemsets = set()
 
+
 class TransactionInfo:
     """A class to represent a transaction info <TID, U, PRU>."""
+
     def __init__(self, tid, utility, pru):
         self.tid = tid
         self.utility = utility
@@ -21,8 +24,10 @@ class TransactionInfo:
     def __repr__(self):
         return f"<TID: {self.tid}, U: {self.utility}, PRU: {self.pru}>"
 
+
 class TIVector:
     """A class to represent the TI-vector, a container for <TID, U, PRU> structures."""
+
     def __init__(self):
         self.transactions = []
 
@@ -32,8 +37,10 @@ class TIVector:
     def __repr__(self):
         return f"TI-Vector({self.transactions})"
 
+
 class EHMINItem:
     """A class to represent an item in the EHMIN-list with its utility, PRU, and TI-vector."""
+
     def __init__(self, item_name=None, utility=0, pru=0):
         self.item_name = item_name
         self.utility = utility
@@ -42,16 +49,20 @@ class EHMINItem:
 
     def add_transaction_info(self, tid, utility, pru):
         self.ti_vector.add_transaction(tid, utility, pru)
-    
+
     def set_ti_vector(self, ti_vector):
         self.ti_vector = ti_vector
 
     def __repr__(self):
-        return (f"EHMINItem(Item: {self.item_name}, U: {self.utility}, PRU: {self.pru}, "
-                f"{self.ti_vector})")
+        return (
+            f"EHMINItem(Item: {self.item_name}, U: {self.utility}, PRU: {self.pru}, "
+            f"{self.ti_vector})"
+        )
+
 
 class EHMINList:
     """A class to manage a global EHMIN-list."""
+
     def __init__(self):
         self.items = {}
 
@@ -60,7 +71,7 @@ class EHMINList:
         if item_name not in self.items:
             self.items[item_name] = EHMINItem(item_name, utility, pru)
         return self.items[item_name]
-    
+
     def increase_pru(self, item_name, pru):
         self.items[item_name].pru += pru
 
@@ -82,6 +93,7 @@ def utility_of_itemset(itemset, transaction):
             utility += transaction["quantities"][idx] * transaction["profit"][idx]
     return utility
 
+
 def transaction_utility(transaction):
     """
     Calculate the Transaction Utility (TU) for a given transaction.
@@ -102,7 +114,7 @@ def redefine_transaction_utility(transaction):
     """
     RTU = 0
     for i in range(len(transaction["items"])):
-        if transaction["profit"][i] > 0:  
+        if transaction["profit"][i] > 0:
             RTU += transaction["quantities"][i] * transaction["profit"][i]
     return RTU
 
@@ -121,6 +133,7 @@ def calculate_rtwu(itemset, dataset):
             # Calculate RTU for this transaction and add it to RTWU
             RTWU += redefine_transaction_utility(transaction)
     return RTWU
+
 
 def transaction_weight_utility(itemset, dataset):
     """
@@ -161,14 +174,18 @@ def remaining_utility(itemset, transaction):
     """
     ru = 0
     # Get the last index in the sorted transaction where itemset items appear
-    max_idx = max(transaction["items"].index(item) for item in itemset if item in transaction["items"])
-    
+    max_idx = max(
+        transaction["items"].index(item)
+        for item in itemset
+        if item in transaction["items"]
+    )
+
     # Sum the utility of items appearing after the itemset in the transaction
     for i in range(max_idx + 1, len(transaction["items"])):
         quantity = transaction["quantities"][i]
         profit = transaction["profit"][i]
         ru += quantity * profit
-    
+
     return ru
 
 
@@ -180,23 +197,23 @@ def redefined_remaining_utility(itemset, transaction):
     :return: Redefined remaining utility of the itemset in the transaction.
     """
     rru = 0
-    
+
     # Lọc ra những item trong itemset mà có trong transaction["items"]
     valid_items = [item for item in itemset if item in transaction["items"]]
-    
+
     # In case item set is an empty set, rru is an empty set
-    if (len(itemset) == 0):
+    if len(itemset) == 0:
         for i in range(0, len(transaction["items"])):
             quantity = transaction["quantities"][i]
             profit = transaction["profit"][i]
             if profit > 0:  # Only consider items with positive profit
                 rru += quantity * profit
         return rru
-    
+
     # Nếu không có item nào hợp lệ, trả về 0
     if not valid_items:
         return rru
-    
+
     # Get the last index in the sorted transaction where itemset items appear
     max_idx = max(transaction["items"].index(item) for item in valid_items)
     # Sum the utility of items appearing after the itemset with positive profit
@@ -205,8 +222,9 @@ def redefined_remaining_utility(itemset, transaction):
         profit = transaction["profit"][i]
         if profit > 0:  # Only consider items with positive profit
             rru += quantity * profit
-    
+
     return rru
+
 
 def categorize_items(dataset):
     """
@@ -233,11 +251,12 @@ def categorize_items(dataset):
 
     return positive_items, negative_items
 
+
 def calculate_ptwus(dataset):
     """
-    Calculate the Positive Transactional Weighted Utility (PTWU) and 
+    Calculate the Positive Transactional Weighted Utility (PTWU) and
     Redefined Transactional Weighted Utility (RTWU) for each item across the dataset.
-    
+
     PTWU and RTWU measure the utility contribution and frequency of each item in the dataset.
 
     Parameters:
@@ -258,12 +277,13 @@ def calculate_ptwus(dataset):
                 supports[item] += 1
             else:
                 supports[item] = 1
-            
+
             if item not in rtwus:
                 itemset = [item]
                 rtwus[item] = calculate_rtwu(itemset, dataset)
 
     return rtwus, supports
+
 
 def get_items_order(itemset, positive_items, negative_items, rtwus, supports):
     """
@@ -271,58 +291,61 @@ def get_items_order(itemset, positive_items, negative_items, rtwus, supports):
     (i) PI items are sorted by RTWU (ascending), (ii) NI items are sorted by support (ascending).
     """
     itemset = dict(sorted(itemset.items()))
+
     def sort_key(item):
         # If item is in positive_items (PI), sort by RTWU (ascending)
         if item in positive_items:
-            return (1, rtwus.get(item, float('inf')))
+            return (1, rtwus.get(item, float("inf")))
         # If item is in negative_items (NI), sort by support (ascending)
         elif item in negative_items:
-            return (2, supports.get(item, float('inf')))
+            return (2, supports.get(item, float("inf")))
         # Default priority for items not in PI or NI
-        return (3, float('inf'))
+        return (3, float("inf"))
 
     # Sort the items in itemset using the custom sort_key
     sorted_items = sorted(itemset, key=sort_key)
     return sorted_items
 
+
 def calculate_utility_and_dataset(itemset, dataset):
     """
     Calculate the utility of the given itemset and create the corresponding dataset Dβ.
-    
+
     :param itemset: The itemset for which utility is to be calculated.
     :param dataset: The dataset containing transactions.
     :return: A tuple containing the total utility and the filtered dataset.
     """
-    
+
     utility = 0
-    
+
     for transaction in dataset:
         # Convert the itemset to a set for easier subset checking
         itemset_set = set(itemset)
-        
+
         # Check if the itemset is a subset of the transaction's items
-        if itemset_set.issubset(set(transaction['items'])):
+        if itemset_set.issubset(set(transaction["items"])):
             # Calculate utility for this transaction
             transaction_utility = 0
-            
+
             # Calculate utility based on profit and quantities
-            for item, quantity in zip(transaction['items'], transaction['quantities']):
+            for item, quantity in zip(transaction["items"], transaction["quantities"]):
                 if item in itemset_set:
-                    index = transaction['items'].index(item)
-                    profit = transaction['profit'][index]
+                    index = transaction["items"].index(item)
+                    profit = transaction["profit"][index]
                     transaction_utility += profit * quantity
-            
+
             utility += transaction_utility
-    
+
     return utility
+
 
 def calculate_pu(pattern, transaction, positive_items):
     """
     Calculate the Positive Utility (PU) of a given pattern in a transaction.
-    
-    The positive utility of a pattern, X, in a transaction, Tk, is the sum of the utilities 
+
+    The positive utility of a pattern, X, in a transaction, Tk, is the sum of the utilities
     of items in the pattern that are also in the positive items list (PI) in the transaction.
-    
+
     Parameters:
     - pattern: Set of items (list of item names) representing the pattern X.
     - transaction: Dictionary representing a single transaction with keys:
@@ -331,10 +354,10 @@ def calculate_pu(pattern, transaction, positive_items):
         - 'quantities': List of item quantities in the transaction, corresponding to 'items'.
         - 'profit': List of profit per item in the transaction, corresponding to 'items'.
     - positive_items: Set of items considered as positive (PI).
-    
+
     Returns:
     - Positive utility (PU) of the pattern in the given transaction (integer).
-    
+
     Example:
     - For pattern {D, E} in transaction T5 from the dataset, if only D is in PI,
     PU({D, E}, T5) = U(D, T5).
@@ -342,12 +365,17 @@ def calculate_pu(pattern, transaction, positive_items):
     pu = 0  # Initialize positive utility
 
     # Loop through items in the transaction and calculate utility for items in both pattern and positive_items
-    for item, quantity, profit in zip(transaction['items'], transaction['quantities'], transaction['profit']):
+    for item, quantity, profit in zip(
+        transaction["items"], transaction["quantities"], transaction["profit"]
+    ):
         if item in pattern and item in positive_items:
             utility = quantity * profit
-            pu += utility  # Add to positive utility if item is in both the pattern and PI
-    
+            pu += (
+                utility  # Add to positive utility if item is in both the pattern and PI
+            )
+
     return pu
+
 
 def build_eucs(order):
     eucs = [[0 for _ in range(len(order))] for _ in range(len(order))]
@@ -365,25 +393,31 @@ def build_eucs(order):
 
     return eucs
 
+
 def calculate_pru(itemset, dataset):
     # Initialize PRU value
     pru = 0
-    
+
     # Iterate through each transaction in the dataset
     for transaction in dataset:
         items = transaction["items"]
         profits = transaction["profit"]
         quantities = transaction["quantities"]
-        
+
         # Check if itemset is a subset of the transaction's items
         if set(itemset).issubset(set(items)):
             # Calculate PRU(X, T_k) for items after the last item in the itemset
-            pru_x_tk = sum(profits[i] * quantities[i] for i in range(0, len(items)) if profits[i] > 0 and not set(items[i]).issubset(set(itemset)))
-            
+            pru_x_tk = sum(
+                profits[i] * quantities[i]
+                for i in range(0, len(items))
+                if profits[i] > 0 and not set(items[i]).issubset(set(itemset))
+            )
+
             # Add PRU(X, T_k) to the total PRU(X)
             pru += pru_x_tk
 
     return pru
+
 
 def ehmin_combine(Uk, Ul, pfutils, minU):
     """
@@ -418,7 +452,7 @@ def ehmin_combine(Uk, Ul, pfutils, minU):
         if sk.tid == sl.tid:
             # Retrieve the prefix utility for the shared transaction ID
             pfutil = pfutils.get(sk.tid, 0)
-            
+
             # Calculate the combined utility and remaining utility
             util = sk.utility + sl.utility - pfutil
             rutil = min(sk.pru, sl.pru)
@@ -426,7 +460,7 @@ def ehmin_combine(Uk, Ul, pfutils, minU):
             # Add the combined transaction to C
             C.add_transaction_info(sk.tid, utility=util, pru=rutil)
             C.utility += util
-            
+
             # Update the `y` value for pruning
             y += sl.utility - pfutil
 
@@ -442,10 +476,10 @@ def ehmin_combine(Uk, Ul, pfutils, minU):
             current_l += 1
         else:
             # LA-Prune condition: check if further processing is beneficial
-            x -= (sk.utility + sk.pru)
+            x -= sk.utility + sk.pru
             if x < minU:
                 return None
-            
+
             # Move iterator for Uk forward
             current_k += 1
 
@@ -467,7 +501,7 @@ def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
         # First pruning condition (U ≥ minUtil)
         if Uk.utility >= minU:
             tmp = pref.union({Uk.item_name})
-            HUP[''.join(tmp)] = Uk.utility
+            HUP["".join(tmp)] = Uk.utility
 
         # Second pruning condition (U + PRU ≥ minUtil)
         if Uk.utility + Uk.pru >= minU:
@@ -480,14 +514,15 @@ def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
                 l = sorted_item.index(Ul.item_name)
                 if k <= l:  # Ensure l > k
                     # EUCS pruning condition
-                        if eucs[l][k] >= minU:
-                            C = ehmin_combine(Uk, Ul, pfutils, minU)
-                            if C:
-                                CL.items[C.item_name] = C
+                    if eucs[l][k] >= minU:
+                        C = ehmin_combine(Uk, Ul, pfutils, minU)
+                        if C:
+                            CL.items[C.item_name] = C
 
             # Recursive call to EHMIN_Mine if CL is non-empty
             if len(CL.items) > 0:
                 ehmin_mine(Uk, CL, pref | {Uk.item_name}, eucs, minU, sorted_item)
+
 
 def ehmin(δ):
     # Step 1: 1st Database Scan
@@ -507,7 +542,9 @@ def ehmin(δ):
     # Get EHMN-list for 1-itemsets
     positive_items, negative_items = categorize_items(dataset)
     list_item = {item: ptwu for item, ptwu in ptwus.items() if ptwu >= minU}
-    sorted_item = get_items_order(list_item, positive_items, negative_items, ptwus, supports)
+    sorted_item = get_items_order(
+        list_item, positive_items, negative_items, ptwus, supports
+    )
     print("sorted_item", sorted_item)
     # Index EHMIN-list sorted item
     # Calculate utility
@@ -516,26 +553,27 @@ def ehmin(δ):
         # Index EHMIN-list with utility and pru = 0
         ehmin_item = ehmin_list.find_or_create(item, utility)
     print("Ehmin", ehmin_list)
-        
+
     # Step 2: 2nd Database Scan
     for transaction in dataset:
         ptu_k = 0  # Recompute PTU(Tk) and initialize it to 0
 
         # Step 1: Calculate PTU for each transaction
-        for item in transaction['items']:
+        for item in transaction["items"]:
             # Check PTWU(i) condition for pruning
             if ptwus[item] > minU:
                 ptu_k += calculate_pu(set(item), transaction, positive_items)
-        
+
         # Initialize a temporary map
         tmp = {}
 
         # # Step 2: Insert items into tmp and calculate PTWU if necessary
-        for item, quantity, profit in zip(transaction['items'], transaction['quantities'], transaction['profit']):
+        for item, quantity, profit in zip(
+            transaction["items"], transaction["quantities"], transaction["profit"]
+        ):
             tmp[item] = quantity * profit  # Store internal utility and external utility
 
-            
-        # PTWU condition to recompute PTWU
+            # PTWU condition to recompute PTWU
             if ptwus[item] > minU:
                 new_PTWIU = calculate_rtwu(set(item), dataset)
                 ptwus[item] = new_PTWIU + ptu_k
@@ -543,15 +581,19 @@ def ehmin(δ):
         rutil = 0  # Initialize rutil
         # Sort to calculate PRU (inportant)
         tmp_list_item = {item: ptwu for item, ptwu in tmp.items()}
-        tmp = get_items_order(tmp_list_item, positive_items, negative_items, ptwus, supports)
+        tmp = get_items_order(
+            tmp_list_item, positive_items, negative_items, ptwus, supports
+        )
         tmp = {item: tmp_list_item[item] for item in tmp}
         # # Process each item in reverse order
         for item, utility in reversed(list(tmp.items())):
             # Find or create the item in the EHMIN-list
-            ehmin_item = ehmin_list.find_or_create(item, utility, pru = 0)
+            ehmin_item = ehmin_list.find_or_create(item, utility, pru=0)
             # Insert values into Ui.Tk vector
-            ehmin_item.add_transaction_info(transaction["TID"], utility=utility, pru = rutil)
-            
+            ehmin_item.add_transaction_info(
+                transaction["TID"], utility=utility, pru=rutil
+            )
+
             # Update rutil if U(i) > 0
             # This make PRU wrong value!
             if utility > 0:
@@ -565,12 +607,13 @@ def ehmin(δ):
         # return
 
     print("After 2nd scan", ehmin_list)
-    
+
     # Step 3: Mining
     ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
     for item in HUP:
         print(item, "-", HUP[item])
     return HUP
+
 
 # Create an empty EHMINList
 HUP = {}
