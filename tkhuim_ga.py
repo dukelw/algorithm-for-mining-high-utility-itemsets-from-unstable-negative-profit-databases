@@ -3,7 +3,7 @@ import random
 
 def get_dataset():
     data = []
-    with open("3rddataset.txt", "r", encoding="utf-8") as dataset:
+    with open("4thdataset.txt", "r", encoding="utf-8") as dataset:
         next(dataset)
         for line in dataset:
             parts = line.split()
@@ -321,6 +321,6 @@ def tournament_selection(P, k, n):
     return B
 
 
-E = TKHUIM_GA(dataset, 4, 5, 8)
+E = TKHUIM_GA(dataset, 4, 5, 20)
 for item in E:
     print(item, "-", E[item])

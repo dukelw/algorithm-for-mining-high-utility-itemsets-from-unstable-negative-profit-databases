@@ -14,9 +14,26 @@ printed_itemsets = set()
 
 
 class TransactionInfo:
-    """A class to represent a transaction info <TID, U, PRU>."""
+    """
+    A class to represent a transaction info <TID, U, PRU>.
 
-    def __init__(self, tid, utility, pru):
+    Attributes:
+        tid (str): The unique identifier of the transaction (TID).
+        utility (int): The total utility (U) of the transaction.
+        pru (int): The positive remaining utility (PRU) of the transaction.
+
+    Methods:
+        __repr__(): Provides a string representation of the transaction info.
+    """
+
+    def __init__(self, tid: str, utility: int, pru: int):
+        """
+        Init TI <TID, U, PRU>.
+        Attributes:
+            tid (str): The unique identifier of the transaction (TID).
+            utility (int): The total utility (U) of the transaction.
+            pru (int): The positive remaining utility (PRU) of the transaction.
+        """
         self.tid = tid
         self.utility = utility
         self.pru = pru
@@ -26,12 +43,31 @@ class TransactionInfo:
 
 
 class TIVector:
-    """A class to represent the TI-vector, a container for <TID, U, PRU> structures."""
+    """
+    A class to represent the TI-vector, a container for <TID, U, PRU> structures.
+
+    Attributes:
+        transactions (list[TransactionInfo]): A list of TransactionInfo objects.
+
+    Methods:
+        add_transaction(tid, utility, pru):
+            Adds a new TransactionInfo object to the transactions list.
+
+        __repr__():
+            Provides a string representation of the TI-vector.
+    """
 
     def __init__(self):
         self.transactions = []
 
-    def add_transaction(self, tid, utility, pru):
+    def add_transaction(self, tid: str, utility: int, pru: int):
+        """
+        Add new transaction information
+        Attributes:
+            tid (str): The unique identifier of the transaction (TID).
+            utility (int): The total utility (U) of the transaction.
+            pru (int): The positive remaining utility (PRU) of the transaction.
+        """
         self.transactions.append(TransactionInfo(tid, utility, pru))
 
     def __repr__(self):
@@ -39,7 +75,25 @@ class TIVector:
 
 
 class EHMINItem:
-    """A class to represent an item in the EHMIN-list with its utility, PRU, and TI-vector."""
+    """
+    A class to represent an item in the EHMIN-list with its utility, PRU, and TI-vector.
+
+    Attributes:
+        item_name (str): The name of the item.
+        utility (int): The total utility (U) associated with the item.
+        pru (int): The positive remaining utility (PRU) of the item.
+        ti_vector (TIVector): The TI-vector containing transaction details for the item.
+
+    Methods:
+        add_transaction_info(tid, utility, pru):
+            Adds a transaction info to the item's TI-vector.
+
+        set_ti_vector(ti_vector):
+            Sets a pre-created TI-vector for the item.
+
+        __repr__():
+            Provides a string representation of the EHMINItem object.
+    """
 
     def __init__(self, item_name=None, utility=0, pru=0):
         self.item_name = item_name
@@ -47,10 +101,20 @@ class EHMINItem:
         self.pru = pru
         self.ti_vector = TIVector() if item_name is not None else None
 
-    def add_transaction_info(self, tid, utility, pru):
+    def add_transaction_info(self, tid: str, utility: int, pru: int):
+        """
+        Sets a pre-created TI-vector for the item.
+        :param tid (str): The unique identifier of the transaction (TID).
+        :param utility (int): The total utility (U) of the transaction.
+        :param pru (int): The positive remaining utility (PRU) of the transaction.
+        """
         self.ti_vector.add_transaction(tid, utility, pru)
 
-    def set_ti_vector(self, ti_vector):
+    def set_ti_vector(self, ti_vector: TIVector):
+        """
+        Sets a pre-created TI-vector for the item.
+        :param ti_vector: TIVector
+        """
         self.ti_vector = ti_vector
 
     def __repr__(self):
@@ -61,25 +125,51 @@ class EHMINItem:
 
 
 class EHMINList:
-    """A class to manage a global EHMIN-list."""
+    """
+    A class to manage a global EHMIN-list.
+
+    Attributes:
+        items (dict[str, EHMINItem]): A dictionary of items where keys are item names
+            and values are EHMINItem objects.
+
+    Methods:
+        find_or_create(item_name, utility=0, pru=0):
+            Finds an item by name or creates a new one if it doesn't exist.
+
+        increase_pru(item_name, pru):
+            Increases the PRU of an item by a given amount.
+
+        __repr__():
+            Provides a string representation of the EHMINList.
+    """
 
     def __init__(self):
         self.items = {}
 
-    def find_or_create(self, item_name, utility=0, pru=0):
-        """Finds an item by name or creates a new one if it doesn't exist."""
+    def find_or_create(self, item_name: str, utility=0, pru=0):
+        """
+        Finds an item by name or creates a new one if it doesn't exist.
+        :param item_name (str): The name of item.
+        :param utility (int): The total utility (U) of the transaction.
+        :param pru (int): The positive remaining utility (PRU) of the transaction.
+        """
         if item_name not in self.items:
             self.items[item_name] = EHMINItem(item_name, utility, pru)
         return self.items[item_name]
 
-    def increase_pru(self, item_name, pru):
+    def increase_pru(self, item_name: str, pru: int):
+        """
+        Increase pru value of an item.
+        :param item_name (str): The name of item.
+        :param pru (int): The positive remaining utility (PRU) of the transaction.
+        """
         self.items[item_name].pru += pru
 
     def __repr__(self):
         return f"EHMINList({list(self.items.values())})"
 
 
-def utility_of_itemset(itemset, transaction):
+def utility_of_itemset(itemset: list[str], transaction: dict) -> int:
     """
     Calculate the utility of an itemset in a given transaction.
     :param itemset: List of items in the itemset.
@@ -94,7 +184,7 @@ def utility_of_itemset(itemset, transaction):
     return utility
 
 
-def transaction_utility(transaction):
+def transaction_utility(transaction: dict) -> int:
     """
     Calculate the Transaction Utility (TU) for a given transaction.
     :param transaction: A dictionary with transaction data.
@@ -106,9 +196,9 @@ def transaction_utility(transaction):
     return utility
 
 
-def redefine_transaction_utility(transaction):
+def redefine_transaction_utility(transaction: dict) -> int:
     """
-    Calculate the PTU /Redefined Transaction Utility (RTU) for a given transaction.
+    Calculate the PTU (Positive Transaction Utility)/Redefined Transaction Utility (RTU) for a given transaction.
     :param transaction: A dictionary with transaction data.
     :return: Total Reduced Utility of the transaction.
     """
@@ -119,12 +209,12 @@ def redefine_transaction_utility(transaction):
     return RTU
 
 
-def calculate_rtwu(itemset, dataset):
+def calculate_rtwu(itemset: list[str], dataset: list[dict]) -> int:
     """
-    Calculate the Redefined Transactional Weighted Utility (RTWU) for a given itemset across the dataset.
+    Calculate the Redefined Transactional Weighted Utility (RTWU)/Positive Transactional Weighted Utility (PTWU) for a given itemset across the dataset.
     :param itemset: A list of items defining the base itemset (e.g., ['a', 'b']).
     :param dataset: A list of transactions.
-    :return: RTWU value for the itemset across the dataset.
+    :return: PTWU/RTWU value for the itemset across the dataset.
     """
     RTWU = 0
     for transaction in dataset:
@@ -135,27 +225,12 @@ def calculate_rtwu(itemset, dataset):
     return RTWU
 
 
-def transaction_weight_utility(itemset, dataset):
+def redefine_transaction_weight_utility(itemset: list[str], dataset: list[dict]) -> int:
     """
-    Calculate the Transaction Weight Utility (TWU) for an itemset in the dataset.
+    Calculate the Positive Transaction Weight Utility (RTWU)/Redefined Transaction Weight Utility (RTWU) for an itemset in the dataset.
     :param itemset: List of items in the itemset.
     :param dataset: List of transactions.
-    :return: Total TWU of the itemset across all transactions in the database.
-    """
-    TWU = 0
-    for transaction in dataset:
-        # Check if all items in itemset are present in the transaction
-        if all(item in transaction["items"] for item in itemset):
-            TWU += transaction_utility(transaction)
-    return TWU
-
-
-def redefine_transaction_weight_utility(itemset, dataset):
-    """
-    Calculate the Redefined Transaction Weight Utility (RTWU) for an itemset in the dataset.
-    :param itemset: List of items in the itemset.
-    :param dataset: List of transactions.
-    :return: Total RTWU of the itemset across all transactions in the database.
+    :return: Total PTWU/RTWU of the itemset across all transactions in the database.
     """
     RTWU = 0
     for transaction in dataset:
@@ -165,40 +240,15 @@ def redefine_transaction_weight_utility(itemset, dataset):
     return RTWU
 
 
-def remaining_utility(itemset, transaction):
+def redefined_remaining_utility(itemset: list[str], transaction: dict) -> int:
     """
-    Calculate the remaining utility (ru) of an itemset in a transaction.
+    Calculate the positive remaining utility (pru)/redefined remaining utility (rru) of an itemset in a transaction.
     :param itemset: List of items in the itemset.
     :param transaction: A dictionary with transaction data.
-    :return: Remaining utility of the itemset in the transaction.
-    """
-    ru = 0
-    # Get the last index in the sorted transaction where itemset items appear
-    max_idx = max(
-        transaction["items"].index(item)
-        for item in itemset
-        if item in transaction["items"]
-    )
-
-    # Sum the utility of items appearing after the itemset in the transaction
-    for i in range(max_idx + 1, len(transaction["items"])):
-        quantity = transaction["quantities"][i]
-        profit = transaction["profit"][i]
-        ru += quantity * profit
-
-    return ru
-
-
-def redefined_remaining_utility(itemset, transaction):
-    """
-    Calculate the redefined remaining utility (rru) of an itemset in a transaction.
-    :param itemset: List of items in the itemset.
-    :param transaction: A dictionary with transaction data.
-    :return: Redefined remaining utility of the itemset in the transaction.
+    :return: Positive/Redefined remaining utility of the itemset in the transaction.
     """
     rru = 0
 
-    # Lọc ra những item trong itemset mà có trong transaction["items"]
     valid_items = [item for item in itemset if item in transaction["items"]]
 
     # In case item set is an empty set, rru is an empty set
@@ -210,7 +260,6 @@ def redefined_remaining_utility(itemset, transaction):
                 rru += quantity * profit
         return rru
 
-    # Nếu không có item nào hợp lệ, trả về 0
     if not valid_items:
         return rru
 
@@ -226,9 +275,9 @@ def redefined_remaining_utility(itemset, transaction):
     return rru
 
 
-def categorize_items(dataset):
+def categorize_items(dataset: list[dict]) -> tuple[set[str], set[str]]:
     """
-    Calculate item utilities and classify items into positive, negative, and mixed utility sets.
+    Calculate item utilities and classify items into positive and negative utility sets.
     :param dataset: List of transactions.
     :return: Tuple of (positive_items, negative_items, mixed_items)
     """
@@ -252,12 +301,11 @@ def categorize_items(dataset):
     return positive_items, negative_items
 
 
-def calculate_ptwus(dataset):
+def calculate_ptwus(dataset: list[dict]) -> tuple[dict, dict]:
     """
-    Calculate the Positive Transactional Weighted Utility (PTWU) and
-    Redefined Transactional Weighted Utility (RTWU) for each item across the dataset.
+    Calculate the Positive Transactional Weighted Utility (PTWU) and support for each item across the dataset.
 
-    PTWU and RTWU measure the utility contribution and frequency of each item in the dataset.
+    PTWU measure the utility contribution and frequency of each item in the dataset.
 
     Parameters:
     dataset (list): A list of dictionaries, where each dictionary represents a transaction with:
@@ -265,7 +313,7 @@ def calculate_ptwus(dataset):
 
     Returns:
     tuple: A tuple containing:
-        - rtwus (dict): A dictionary where keys are items and values are their RTWU across transactions.
+        - ptwus (dict): A dictionary where keys are items and values are their RTWU across transactions.
         - supports (dict): A dictionary where keys are items and values are their occurrence counts.
     """
     rtwus = {}
@@ -285,10 +333,21 @@ def calculate_ptwus(dataset):
     return rtwus, supports
 
 
-def get_items_order(itemset, positive_items, negative_items, rtwus, supports):
+def get_items_order(
+    itemset: list[str],
+    positive_items: list[str],
+    negative_items: list[str],
+    rtwus: dict,
+    supports: dict,
+) -> list[str]:
     """
     Sort items in a transaction according to the processing order:
     (i) PI items are sorted by RTWU (ascending), (ii) NI items are sorted by support (ascending).
+    :param items: List of items to sort
+    :param positive_items: List of positive items
+    :param negative_items: List of negative items
+    :param rtwus/ptwus: Dictionary of rtwus/ptwus
+    :supports: Dictionary of support for sorting
     """
     itemset = dict(sorted(itemset.items()))
 
@@ -307,13 +366,13 @@ def get_items_order(itemset, positive_items, negative_items, rtwus, supports):
     return sorted_items
 
 
-def calculate_utility_and_dataset(itemset, dataset):
+def calculate_utility(itemset: list[str], dataset: list[dict]) -> int:
     """
-    Calculate the utility of the given itemset and create the corresponding dataset Dβ.
+    Calculate the utility of the given itemset.
 
     :param itemset: The itemset for which utility is to be calculated.
     :param dataset: The dataset containing transactions.
-    :return: A tuple containing the total utility and the filtered dataset.
+    :return: Total utility.
     """
 
     utility = 0
@@ -339,7 +398,9 @@ def calculate_utility_and_dataset(itemset, dataset):
     return utility
 
 
-def calculate_pu(pattern, transaction, positive_items):
+def calculate_pu(
+    pattern: set[str], transaction: dict, positive_items: list[str]
+) -> int:
     """
     Calculate the Positive Utility (PU) of a given pattern in a transaction.
 
@@ -377,7 +438,27 @@ def calculate_pu(pattern, transaction, positive_items):
     return pu
 
 
-def build_eucs(order):
+def build_eucs(order: list[str]) -> list[list[any]]:
+    """
+    Build an Estimated Utility Co-occurrence Structure (EUCS).
+
+    This function creates a 2D matrix representing the relationships between
+    items in the input `order`. The matrix is filled with RTWU (Revised
+    Transaction Weighted Utility) values computed for each pair of items.
+
+    Args:
+        order (list[str]): A list of item names representing the pattern X.
+
+    Returns:
+        list[list[Any]]: A 2D matrix (EUCS) where:
+            - `eucs[0][i]` contains item names from the input order.
+            - Other cells (eucs[i][j]) contain RTWU values for pairs of items.
+
+    Notes:
+        This function uses a global variable `dataset` for transaction data and
+        a helper function `calculate_rtwu` to compute utility values. Ensure these
+        are defined and accessible.
+    """
     eucs = [[0 for _ in range(len(order))] for _ in range(len(order))]
 
     for i in range(1, len(order)):
@@ -394,7 +475,48 @@ def build_eucs(order):
     return eucs
 
 
-def calculate_pru(itemset, dataset):
+def calculate_pru(itemset: list[str], dataset: list[dict]) -> int:
+    """
+    Calculate the Potential Remaining Utility (PRU) of an itemset in a dataset.
+
+    The PRU of an itemset quantifies the total utility of items in transactions
+    that are not part of the given itemset but co-occur with it.
+
+    Args:
+        itemset (list[str]): A list of item names representing the itemset X.
+        dataset (list[dict]): A list of transactions. Each transaction is a dictionary with keys:
+            - "items" (list[str]): List of items in the transaction.
+            - "profit" (list[int]): Profit values for each item in the transaction.
+            - "quantities" (list[int]): Quantities of each item in the transaction.
+
+    Returns:
+        int: The total PRU value for the given itemset across all transactions in the dataset.
+
+    Notes:
+        - PRU(X, T_k) is calculated for items in a transaction that:
+            1. Are not part of the given itemset.
+            2. Have a positive profit value.
+        - This function assumes the dataset is pre-validated to ensure all fields are present.
+
+    Examples:
+        dataset = [
+            {
+                "items": ["apple", "banana", "cherry"],
+                "profit": [5, 3, 10],
+                "quantities": [2, 3, 1],
+            },
+            {
+                "items": ["apple", "date"],
+                "profit": [8, 7],
+                "quantities": [1, 5],
+            },
+        ]
+
+        itemset = ["apple"]
+
+        result = calculate_pru(itemset, dataset)
+        print(result)  # Output will depend on the dataset and itemset.
+    """
     # Initialize PRU value
     pru = 0
 
@@ -419,7 +541,7 @@ def calculate_pru(itemset, dataset):
     return pru
 
 
-def ehmin_combine(Uk, Ul, pfutils, minU):
+def ehmin_combine(Uk: EHMINItem, Ul: EHMINItem, pfutils: dict, minU: int) -> EHMINItem:
     """
     Combine two EHMIN-lists (Uk, Ul) and create a new conditional EHMIN-list.
     Args:
@@ -489,7 +611,27 @@ def ehmin_combine(Uk, Ul, pfutils, minU):
     return C
 
 
-def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
+def ehmin_mine(
+    P: EHMINItem,
+    UL: EHMINList,
+    pref: set[str],
+    eucs: list[list[any]],
+    minU: int,
+    sorted_item: list[str],
+):
+    """
+    Recursive function to mine data.
+    Parameters:
+    - P (EHMINItem): The prefix pattern.
+    - UL (EHMINList): The list of unprocessed items.
+    - pref (set[str]): The prefix pattern.
+    - eucs (list[list[any]]): The estimated utility co-occurrence structure.
+    - minU (int): The minimum utility threshold for pruning.
+    - sorted_item (list[str]): The sorted list of items.
+
+    Returns:
+    - None. The function performs the EHMIN algorithm recursively.
+    """
     # Initialize the prefix utility map
     pfutils = {}
     if P.item_name != None:
@@ -524,9 +666,17 @@ def ehmin_mine(P, UL, pref, eucs, minU, sorted_item):
                 ehmin_mine(Uk, CL, pref | {Uk.item_name}, eucs, minU, sorted_item)
 
 
-def ehmin(δ):
+def ehmin(k, δ: float):
+    """Using for execute EHMIN Algorithm finding top K high utility
+    Args:
+        k: The number of patterns to find
+        δ: Minimum utility threshold for pruning
+    Returns:
+        Print all the top K high utility item that greater than or equal threshold
+    """
     # Step 1: 1st Database Scan
     # Calculate PTWU (RTWU)
+    global HUP
     ptwus, supports = calculate_ptwus(dataset)
     ptus = {}
     print("ptwus", ptwus)
@@ -549,7 +699,7 @@ def ehmin(δ):
     # Index EHMIN-list sorted item
     # Calculate utility
     for item in sorted_item:
-        utility = calculate_utility_and_dataset(item, dataset)
+        utility = calculate_utility(item, dataset)
         # Index EHMIN-list with utility and pru = 0
         ehmin_item = ehmin_list.find_or_create(item, utility)
     print("Ehmin", ehmin_list)
@@ -595,7 +745,6 @@ def ehmin(δ):
             )
 
             # Update rutil if U(i) > 0
-            # This make PRU wrong value!
             if utility > 0:
                 ehmin_list.increase_pru(item, rutil)
                 rutil += utility
@@ -610,12 +759,12 @@ def ehmin(δ):
 
     # Step 3: Mining
     ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
+    HUP = dict(sorted(HUP.items(), key=lambda item: item[1], reverse=True)[:k])
     for item in HUP:
         print(item, "-", HUP[item])
-    return HUP
 
 
 # Create an empty EHMINList
 HUP = {}
 ehmin_list = EHMINList()
-ehmin(0.2)
+ehmin(20, 0.2)

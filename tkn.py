@@ -3,16 +3,16 @@ from collections import defaultdict
 
 # Define dataset and profits
 TKHQ = []  # Sử dụng danh sách để làm hàng đợi ưu tiên thủ công
-transactions = {
-    "t1": {"a": 1, "b": 2, "c": 2, "d": 1},
-    "t2": {"a": 1, "b": 3, "c": 3, "d": 2, "e": 2},
-    "t3": {"a": 1, "c": 6, "e": 3},
-    "t4": {"b": 3, "d": 5, "e": 2},
-    "t5": {"b": 1, "c": 5, "d": 1, "e": 4},
-    "t6": {"c": 2, "d": 1, "e": 1},
-}
+# transactions = {
+#     "t1": {"a": 1, "b": 2, "c": 2, "d": 1},
+#     "t2": {"a": 1, "b": 3, "c": 3, "d": 2, "e": 2},
+#     "t3": {"a": 1, "c": 6, "e": 3},
+#     "t4": {"b": 3, "d": 5, "e": 2},
+#     "t5": {"b": 1, "c": 5, "d": 1, "e": 4},
+#     "t6": {"c": 2, "d": 1, "e": 1},
+# }
 
-profits = {"a": 4, "b": 3, "c": 1, "d": -1, "e": 2}
+# profits = {"a": 4, "b": 3, "c": 1, "d": -1, "e": 2}
 
 # transactions={
 #     't1': {'a': 2, 'b': 2, 'd': 1, 'e': 3, 'f': 2, 'g': 1},
@@ -27,17 +27,16 @@ profits = {"a": 4, "b": 3, "c": 1, "d": -1, "e": 2}
 #     'a': 4, 'b': 3, 'c': 1, 'd': -1, 'e': 2, 'f': -1, 'g': -2
 # }
 
-# transactions={
-#     't1': {'a': 2, 'b': 3, 'd': 1, 'h': 1},
-#     't2': {'a': 2, 'c': 4, 'e': 2, 'h': 3},
-#     't3': {'b': 6, 'c': 3, 'd': 1, 'e': 3, 'f': 2},
-#     't4': {'a': 4, 'b': 3, 'c': 3, 'g': 2},
-#     't5': {'b': 4, 'd': 4, 'e': 1, 'g': 2, 'h': 1}
+# transactions = {
+#     "t1": {"a": 2, "b": 3, "d": 1, "h": 1},
+#     "t2": {"a": 2, "c": 4, "e": 2, "h": 3},
+#     "t3": {"b": 6, "c": 3, "d": 1, "e": 3, "f": 2},
+#     "t4": {"a": 4, "b": 3, "c": 3, "g": 2},
+#     "t5": {"b": 4, "d": 4, "e": 1, "g": 2, "h": 1},
 # }
 
-# profits={
-#     'a': 2, 'b': 1, 'd': 3, 'h': -1, 'c': 1, 'e': -1, 'f': 5, 'g': -1
-# }
+# profits = {"a": 2, "b": 1, "d": 3, "h": -1, "c": 1, "e": -1, "f": 5, "g": -1}
+
 
 
 def calculate_priu(transactions, profits):
@@ -652,5 +651,5 @@ def TKN_algorithm(D, k):
     print("Result:", TKHQ[0:k])
 
 
-k = 4
+k = 20
 result = TKN_algorithm(transactions, k)
