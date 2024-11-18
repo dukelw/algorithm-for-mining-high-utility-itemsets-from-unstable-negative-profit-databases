@@ -1,5 +1,14 @@
 # Demo
-def read_data(file_name="table.txt"):
+import time
+
+start_time = time.time()
+
+import tracemalloc
+
+tracemalloc.start()
+
+
+def read_data(file_name="data.txt"):
     with open(file_name, "r") as file:
         data = file.read()
 
@@ -9,22 +18,6 @@ def read_data(file_name="table.txt"):
 
 dataset = read_data()
 
-# import ast
-
-# def load_data_from_file(filename):
-#     dataset = []
-
-#     with open(filename, 'r') as file:
-#         for line in file:
-#             transaction = ast.literal_eval(line.strip())
-#             dataset.append(transaction)
-
-#     return dataset
-
-# dataset = load_data_from_file('data.txt')
-# print(dataset)
-
-# For unique printing
 HUP = {}
 
 
@@ -610,4 +603,15 @@ def emhun(dataset: list[dict], minU: int, k):
         print(item, "-", HUP[item])
 
 
-emhun(dataset, minU=25, k=10)
+emhun(dataset, minU=600000, k=200000)
+
+end_time = time.time()
+
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time:.6f} seconds")
+
+current, peak = tracemalloc.get_traced_memory()
+
+tracemalloc.stop()
+print(f"Current memory usage: {current / 1024:.2f} KB")
+print(f"Peak memory usage: {peak / 1024:.2f} KB")

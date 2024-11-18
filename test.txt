@@ -24,6 +24,6 @@
         "TID": "T6",
         "items": ["c", "d", "e"],
         "quantities": [2, 1, 1],
-        "profit": [1, -1, -2],
+        "profit": [1, -1, 2],
     },
 ]

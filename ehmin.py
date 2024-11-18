@@ -1,5 +1,35 @@
 # Demo
-def read_data(file_name="ehmintable.txt"):
+
+import time
+import tracemalloc
+
+start_time = time.time()
+tracemalloc.start()
+
+
+def read_data(file_name="test.txt"):
+    """
+    Read and parse the dataset from the given file.
+
+    Parameters:
+    file_name (str): The name of the file containing the dataset. The default is "ehmintable.txt".
+
+    Returns:
+    list: A list of dictionaries representing the transactions. Each dictionary contains:
+        - 'TID': Transaction ID.
+        - 'items': List of item names in the transaction.
+        - 'profit': List of profit per item in the transaction.
+        - 'quantities': List of quantities of each item in the transaction.
+
+    Example:
+    >>> dataset = read_data()
+    >>> print(dataset)
+    [
+        {'TID': 'T1', 'items': ['apple', 'banana'], 'profit': [5, 3], 'quantities': [2, 3]},
+        {'TID': 'T2', 'items': ['apple', 'date'], 'profit': [8, 7], 'quantities': [1, 5]},
+        ...
+    ]
+    """
     with open(file_name, "r") as file:
         data = file.read()
 
@@ -28,11 +58,13 @@ class TransactionInfo:
 
     def __init__(self, tid: str, utility: int, pru: int):
         """
-        Init TI <TID, U, PRU>.
-        Attributes:
-            tid (str): The unique identifier of the transaction (TID).
-            utility (int): The total utility (U) of the transaction.
-            pru (int): The positive remaining utility (PRU) of the transaction.
+        Initialize a Transaction Information (TI) object with a transaction ID (TID),
+        total utility (U), and positive remaining utility (PRU).
+
+        Parameters:
+        - tid (str): The unique identifier of the transaction.
+        - utility (int): The total utility of the transaction.
+        - pru (int): The positive remaining utility of the transaction.
         """
         self.tid = tid
         self.utility = utility
@@ -63,6 +95,7 @@ class TIVector:
     def add_transaction(self, tid: str, utility: int, pru: int):
         """
         Add new transaction information
+
         Attributes:
             tid (str): The unique identifier of the transaction (TID).
             utility (int): The total utility (U) of the transaction.
@@ -96,6 +129,17 @@ class EHMINItem:
     """
 
     def __init__(self, item_name=None, utility=0, pru=0):
+        """
+        Initialize an instance of the EHMINItem class.
+
+        Parameters:
+        - item_name (str): The name of the item.
+        - utility (int): The total utility of the item.
+        - pru (int): The potential remaining utility of the item.
+
+        The class also initializes a Transaction Information Vector (TIVector) for the item.
+        If the item_name is None, the TIVector is set to None.
+        """
         self.item_name = item_name
         self.utility = utility
         self.pru = pru
@@ -104,20 +148,49 @@ class EHMINItem:
     def add_transaction_info(self, tid: str, utility: int, pru: int):
         """
         Sets a pre-created TI-vector for the item.
-        :param tid (str): The unique identifier of the transaction (TID).
-        :param utility (int): The total utility (U) of the transaction.
-        :param pru (int): The positive remaining utility (PRU) of the transaction.
+
+        :param tid: The unique identifier of the transaction (TID).
+        :type tid: str
+
+        :param utility: The total utility (U) of the transaction.
+        :type utility: int
+
+        :param pru: The positive remaining utility (PRU) of the transaction.
+        :type pru: int
+
+        :return: None
         """
         self.ti_vector.add_transaction(tid, utility, pru)
 
-    def set_ti_vector(self, ti_vector: TIVector):
+    def set_ti_vector(self, ti_vector: TIVector) -> None:
         """
         Sets a pre-created TI-vector for the item.
-        :param ti_vector: TIVector
+
+        This method assigns the provided TI-vector to the current item. The TI-vector
+        contains transaction-specific information such as transaction IDs and their
+        corresponding utilities.
+
+        Parameters:
+        - ti_vector (TIVector): The pre-created TI-vector to be assigned to the item.
+
+        Returns:
+        - None: This method does not return any value.
         """
         self.ti_vector = ti_vector
 
     def __repr__(self):
+        """
+        Return a string representation of the EHMINItem object.
+
+        The string representation includes the item name, utility, potential remaining utility (PRU),
+        and the transaction information vector (TI Vector).
+
+        Parameters:
+        None
+
+        Returns:
+        str: A string representation of the EHMINItem object.
+        """
         return (
             f"EHMINItem(Item: {self.item_name}, U: {self.utility}, PRU: {self.pru}, "
             f"{self.ti_vector})"
@@ -144,14 +217,26 @@ class EHMINList:
     """
 
     def __init__(self):
+        """
+        Initialize an empty EHMINList.
+
+        The EHMINList is a data structure used in the EHMIN algorithm for mining frequent itemsets.
+        It contains a dictionary of items, where each item is represented by an EHMINItem object.
+
+        Attributes:
+        - items (dict): A dictionary of items, where keys are item names (strings) and values are EHMINItem objects.
+        """
         self.items = {}
 
     def find_or_create(self, item_name: str, utility=0, pru=0):
         """
         Finds an item by name or creates a new one if it doesn't exist.
+
         :param item_name (str): The name of item.
         :param utility (int): The total utility (U) of the transaction.
         :param pru (int): The positive remaining utility (PRU) of the transaction.
+
+        :return: The EHMINItem object corresponding to the given item_name.
         """
         if item_name not in self.items:
             self.items[item_name] = EHMINItem(item_name, utility, pru)
@@ -160,8 +245,14 @@ class EHMINList:
     def increase_pru(self, item_name: str, pru: int):
         """
         Increase pru value of an item.
-        :param item_name (str): The name of item.
-        :param pru (int): The positive remaining utility (PRU) of the transaction.
+
+        This function updates the positive remaining utility (PRU) of a specific item by adding the given pru value.
+
+        Parameters:
+        - item_name (str): The name of the item whose PRU needs to be updated.
+        - pru (int): The positive remaining utility (PRU) of the transaction.
+
+        The function does not return any value. It directly updates the PRU value of the specified item.
         """
         self.items[item_name].pru += pru
 
@@ -172,9 +263,16 @@ class EHMINList:
 def utility_of_itemset(itemset: list[str], transaction: dict) -> int:
     """
     Calculate the utility of an itemset in a given transaction.
-    :param itemset: List of items in the itemset.
-    :param transaction: A dictionary with transaction data.
-    :return: Total utility of the itemset in the transaction.
+
+    Parameters:
+    itemset (list[str]): List of items in the itemset.
+    transaction (dict): A dictionary with transaction data. It should contain the following keys:
+        - 'items' (list[str]): List of item names in the transaction.
+        - 'quantities' (list[int]): Quantities of each item in the transaction, corresponding to 'items'.
+        - 'profit' (list[int]): Profit values for each item in the transaction, corresponding to 'items'.
+
+    Returns:
+    int: Total utility of the itemset in the transaction.
     """
     utility = 0
     for item in itemset:
@@ -187,7 +285,11 @@ def utility_of_itemset(itemset: list[str], transaction: dict) -> int:
 def transaction_utility(transaction: dict) -> int:
     """
     Calculate the Transaction Utility (TU) for a given transaction.
-    :param transaction: A dictionary with transaction data.
+
+    :param transaction: A dictionary with transaction data. It should contain keys:
+        - "items" (list of str): List of item names in the transaction.
+        - "profit" (list of int): Profit values for each item in the transaction.
+        - "quantities" (list of int): Quantities of each item in the transaction.
     :return: Total utility of the transaction.
     """
     utility = 0
@@ -199,7 +301,11 @@ def transaction_utility(transaction: dict) -> int:
 def redefine_transaction_utility(transaction: dict) -> int:
     """
     Calculate the PTU (Positive Transaction Utility)/Redefined Transaction Utility (RTU) for a given transaction.
-    :param transaction: A dictionary with transaction data.
+
+    :param transaction: A dictionary with transaction data. It should contain keys:
+        - "items" (list of str): List of item names in the transaction.
+        - "profit" (list of int): Profit values for each item in the transaction.
+        - "quantities" (list of int): Quantities of each item in the transaction.
     :return: Total Reduced Utility of the transaction.
     """
     RTU = 0
@@ -243,8 +349,12 @@ def redefine_transaction_weight_utility(itemset: list[str], dataset: list[dict])
 def redefined_remaining_utility(itemset: list[str], transaction: dict) -> int:
     """
     Calculate the positive remaining utility (pru)/redefined remaining utility (rru) of an itemset in a transaction.
+
     :param itemset: List of items in the itemset.
-    :param transaction: A dictionary with transaction data.
+    :param transaction: A dictionary with transaction data. It contains keys:
+        - 'items': List of item names in the transaction.
+        - 'quantities': Quantities of each item in the transaction, corresponding to 'items'.
+        - 'profit': Profit values for each item in the transaction, corresponding to 'items'.
     :return: Positive/Redefined remaining utility of the itemset in the transaction.
     """
     rru = 0
@@ -370,9 +480,9 @@ def calculate_utility(itemset: list[str], dataset: list[dict]) -> int:
     """
     Calculate the utility of the given itemset.
 
-    :param itemset: The itemset for which utility is to be calculated.
-    :param dataset: The dataset containing transactions.
-    :return: Total utility.
+    :param itemset: The itemset for which utility is to be calculated. This is a list of strings representing the items.
+    :param dataset: The dataset containing transactions. This is a list of dictionaries, where each dictionary represents a transaction. Each transaction dictionary contains keys 'items', 'profit', and 'quantities'.
+    :return: Total utility. This is an integer representing the sum of the utilities of the items in the itemset across all transactions in the dataset.
     """
 
     utility = 0
@@ -544,6 +654,7 @@ def calculate_pru(itemset: list[str], dataset: list[dict]) -> int:
 def ehmin_combine(Uk: EHMINItem, Ul: EHMINItem, pfutils: dict, minU: int) -> EHMINItem:
     """
     Combine two EHMIN-lists (Uk, Ul) and create a new conditional EHMIN-list.
+
     Args:
         Uk: EHMIN-list for item Uk
         Ul: EHMIN-list for item Ul
@@ -621,6 +732,7 @@ def ehmin_mine(
 ):
     """
     Recursive function to mine data.
+
     Parameters:
     - P (EHMINItem): The prefix pattern.
     - UL (EHMINList): The list of unprocessed items.
@@ -668,9 +780,11 @@ def ehmin_mine(
 
 def ehmin(k, δ: float):
     """Using for execute EHMIN Algorithm finding top K high utility
+
     Args:
         k: The number of patterns to find
         δ: Minimum utility threshold for pruning
+
     Returns:
         Print all the top K high utility item that greater than or equal threshold
     """
@@ -768,3 +882,14 @@ def ehmin(k, δ: float):
 HUP = {}
 ehmin_list = EHMINList()
 ehmin(20, 0.2)
+
+end_time = time.time()
+
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time:.6f} seconds")
+
+current, peak = tracemalloc.get_traced_memory()
+
+tracemalloc.stop()
+print(f"Current memory usage: {current / 1024:.2f} KB")
+print(f"Peak memory usage: {peak / 1024:.2f} KB")

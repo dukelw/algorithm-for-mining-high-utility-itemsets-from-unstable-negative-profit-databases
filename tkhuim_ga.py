@@ -1,10 +1,23 @@
 import random
 
 
-def get_dataset():
+def get_dataset() -> list:
+    """
+    This function reads a dataset from a text file and returns a list of transactions.
+
+    Parameters:
+    None
+
+    Returns:
+    data (list): A list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers)
+        - List of profits (list of integers)
+    """
     data = []
-    with open("4thdataset.txt", "r", encoding="utf-8") as dataset:
-        next(dataset)
+    with open("3rddataset.txt", "r", encoding="utf-8") as dataset:
+        next(dataset)  # Skip the header line
         for line in dataset:
             parts = line.split()
             transaction_id = parts[0]
@@ -15,7 +28,21 @@ def get_dataset():
     return data
 
 
-def get_utility(data):
+def get_utility(data: list) -> list:
+    """
+    This function calculates the utility of each unique item in the dataset.
+
+    Parameters:
+    data (list): A list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers)
+        - List of profits (list of integers)
+
+    Returns:
+    utility (list): A list of tuples, where each tuple contains an item and its utility.
+        The utility of an item is initially set to 0.
+    """
     unit = set()
     for trans in data:
         for item in trans[1]:
@@ -26,7 +53,26 @@ def get_utility(data):
     return utility
 
 
-def calculate_utility(data, utility):
+def calculate_utility(data: list) -> list:
+    """
+    Calculates the utility of each item in the dataset.
+
+    This function takes a list of transactions and a list of utility values for each unique item,
+    and returns a new list of transactions with the utility values of each item in the transaction.
+
+    Parameters:
+    data (list): A list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers)
+        - List of profits (list of integers)
+
+    Returns:
+    dataset (list): A new list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers) multiplied by their respective profits (list of integers)
+    """
     dataset = []
     for i in range(len(data)):
         dataset.append([data[i][0], data[i][1], data[i][2]])
@@ -37,10 +83,28 @@ def calculate_utility(data, utility):
 
 data = get_dataset()
 utility = list(get_utility(data))
-dataset = calculate_utility(data, utility)
+dataset = calculate_utility(data)
 
 
-def utility_itemset(dataset, utility):
+def utility_itemset(dataset: list, utility: list) -> list:
+    """
+    Calculates the utility of each item in the dataset.
+
+    This function takes a list of transactions and a list of utility values for each unique item,
+    and returns a new list of tuples representing the utility of each item.
+
+    Parameters:
+    dataset (list): A list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers) multiplied by their respective profits (list of integers)
+    utility (list): A list of tuples, where each tuple contains an item and its utility.
+        The utility of an item is initially set to 0.
+
+    Returns:
+    utility_trans (list): A new list of tuples, where each tuple contains an item and its utility.
+        The utility of an item is calculated as the sum of the quantities of that item in all transactions.
+    """
     utility_trans = utility
     for k in range(len(utility_trans)):
         utility_trans[k][1] = 0
@@ -55,11 +119,41 @@ def utility_itemset(dataset, utility):
 u = utility_itemset(dataset, utility)
 
 
-def TU(transaction):
+def TU(transaction: list) -> int:
+    """
+    Calculates the total utility of a transaction.
+
+    This function takes a transaction (represented as a list) and returns the sum of the quantities
+    of items in the transaction. Each quantity is multiplied by its respective profit, as given in the
+    transaction.
+
+    Parameters:
+    transaction (list): A list representing a transaction. The list contains three elements:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers) multiplied by their respective profits (list of integers)
+
+    Returns:
+    int: The total utility of the transaction, calculated as the sum of the quantities of items.
+    """
     return sum(transaction[2])
 
 
-def get_top_m_items(transaction, m):
+def get_top_m_items(transaction: list, m: int) -> list:
+    """
+    Extracts the top 'm' items with the highest utilities from a given transaction.
+
+    Parameters:
+    transaction (list): A list representing a transaction. The list contains three elements:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers) multiplied by their respective profits (list of integers)
+
+    m (int): The number of top items to extract.
+
+    Returns:
+    list: A list containing the transaction ID, the top 'm' items, and their corresponding utilities.
+    """
     items_with_utilities = list(zip(transaction[1], transaction[2]))
     items_with_utilities.sort(key=lambda x: x[1], reverse=True)
     top_m_items = items_with_utilities[:m]
@@ -68,7 +162,23 @@ def get_top_m_items(transaction, m):
     return [transaction[0], top_items, top_utilities]
 
 
-def initial_solutions(dataset, n, m):
+def initial_solutions(dataset: list, n: int, m: int) -> list:
+    """
+    This function generates initial solutions for the Top-k High Utility Itemset Mining (TKHUIM) problem.
+
+    Parameters:
+    dataset (list): A list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers) multiplied by their respective profits (list of integers)
+
+    n (int): The number of initial solutions to generate.
+
+    m (int): The number of top items to extract from each transaction.
+
+    Returns:
+    P (list): A list of initial solutions, where each solution is represented as a list of item names.
+    """
     trans_P = []
     P = []
     for Ty in dataset:
@@ -87,7 +197,19 @@ def initial_solutions(dataset, n, m):
     return P
 
 
-def F(X):
+def F(X: list) -> int:
+    """
+    Calculates the total utility of a given itemset in a transaction dataset.
+
+    Parameters:
+    X (list): A list of item names. The itemset is considered to be present in each transaction
+        if all items in the itemset are present in the transaction.
+
+    Returns:
+    int: The total utility of the itemset in the transaction dataset. The utility of an itemset
+        is calculated as the sum of the quantities of items in the itemset for all transactions
+        where the itemset is present. If the input itemset is None, the function returns 0.
+    """
     sum = 0
     if X is None:
         return sum
@@ -99,7 +221,17 @@ def F(X):
     return sum
 
 
-def roullete_wheel(utility_itemset):
+def roullete_wheel(utility_itemset: list) -> list:
+    """
+    Performs a roulette wheel selection based on the utility values of items.
+
+    Parameters:
+    utility_itemset (list): A list of tuples, where each tuple contains an item and its utility.
+        The utility of an item is initially set to 0.
+
+    Returns:
+    list: A list containing a single item selected based on the roulette wheel selection.
+    """
     elements = []
     weights = []
     sum = 0
@@ -112,7 +244,18 @@ def roullete_wheel(utility_itemset):
     return random.choices(elements, weights, k=1)
 
 
-def genetic_operators(S, a, b):
+def genetic_operators(S: list, a: float, b: float) -> set:
+    """
+    Performs genetic operators (crossover and mutation) on a set of itemsets (S) based on the given probabilities (a and b).
+
+    Parameters:
+    S (set): A set of itemsets. Each itemset is represented as a string of item names.
+    a (float): The probability of performing crossover between two itemsets.
+    b (float): The probability of performing mutation on an itemset.
+
+    Returns:
+    set: A new set of itemsets resulting from the genetic operators.
+    """
     P = set()
     for i in range(len(S)):
         for j in range(i + 1, len(S)):
@@ -225,7 +368,17 @@ def genetic_operators(S, a, b):
     return P
 
 
-def contains_same_characters(E, target):
+def contains_same_characters(E: list, target: str) -> bool:
+    """
+    Checks if a list of strings (E) contains a specific string (target) with the same characters.
+
+    Parameters:
+    E (list): A list of strings.
+    target (str): The string to check for in the list.
+
+    Returns:
+    bool: True if the list contains the target string with the same characters, False otherwise.
+    """
     target_set = set(target)
 
     for item in E:
@@ -235,7 +388,25 @@ def contains_same_characters(E, target):
     return False
 
 
-def TKHUIM_GA(dataset, n, m, e):
+def TKHUIM_GA(dataset: list, n: int, m: int, e: int) -> dict:
+    """
+    Performs the Top-k High Utility Itemset Mining (TKHUIM) problem using a Genetic Algorithm (GA).
+
+    Parameters:
+    dataset (list): A list of transactions. Each transaction is represented as a list containing:
+        - Transaction ID (string)
+        - List of items (list of strings)
+        - List of quantities (list of integers) multiplied by their respective profits (list of integers)
+
+    n (int): The number of initial solutions to generate.
+
+    m (int): The number of top items to extract from each transaction.
+
+    e (int): The number of top-k high utility itemsets to find.
+
+    Returns:
+    dict: A dictionary containing the top-k high utility itemsets and their corresponding utilities.
+    """
     HUP = {}
     P = []
     E = []
@@ -287,12 +458,18 @@ def TKHUIM_GA(dataset, n, m, e):
     return dict(list(HUP.items())[:e])
 
 
-def tournament(T, k):
-    # INPUT
-    #   T = a list of individuals randomly selected from a population.
-    #   k = the tournament size. In other words, the number of elements in T.
-    # OUTPUT
-    #   the fittest individual.
+def tournament(T: list, k: int) -> list:
+    """
+    Performs a tournament selection among a list of individuals.
+
+    Parameters:
+    T (list): A list of individuals randomly selected from a population.
+    k (int): The tournament size, i.e., the number of elements in T.
+
+    Returns:
+    The fittest individual from the tournament.
+
+    """
     if k == 0:
         return
     best = T[0]
@@ -303,14 +480,19 @@ def tournament(T, k):
     return best
 
 
-def tournament_selection(P, k, n):
-    # INPUT
-    #   P = the population as a set of individuals.
-    #   k = the tournament size, such that 1 ≤ k ≤ the number of individuals in P.
-    #   n = the total number of individuals we wish to select.
-    # OUTPUT
-    #   the pool of individuals selected in the tournaments.
+def tournament_selection(P: set, k: int, n: int) -> list:
+    """
+    Performs a tournament selection among a list of individuals.
 
+    Parameters:
+    P (set): The population as a set of individuals.
+    k (int): The tournament size, such that 1 ≤ k ≤ the number of individuals in P.
+    n (int): The total number of individuals we wish to select.
+
+    Returns:
+    list: The pool of individuals selected in the tournaments.
+
+    """
     P_list = list(P)
     B = [None] * n
 
@@ -321,6 +503,6 @@ def tournament_selection(P, k, n):
     return B
 
 
-E = TKHUIM_GA(dataset, 4, 5, 20)
+E = TKHUIM_GA(dataset, 4, 5, 8)
 for item in E:
     print(item, "-", E[item])
