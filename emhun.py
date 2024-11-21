@@ -19,6 +19,7 @@ def read_data(file_name="data.txt"):
 dataset = read_data()
 
 HUP = {}
+check_list = []
 
 
 def utility_of_itemset(itemset: list[str], transaction: dict) -> int:
@@ -61,21 +62,6 @@ def calculate_rtwu(itemset: list[str], dataset: list[dict]) -> int:
         # Check if all items in the itemset are in the transaction
         if all(item in transaction["items"] for item in itemset):
             # Calculate RTU for this transaction and add it to RTWU
-            RTWU += redefine_transaction_utility(transaction)
-    return RTWU
-
-
-def redefine_transaction_weight_utility(itemset: list[str], dataset: list[dict]) -> int:
-    """
-    Calculate the Redefined Transaction Weight Utility (RTWU) for an itemset in the dataset.
-    :param itemset: List of items in the itemset.
-    :param dataset: List of transactions.
-    :return: Total RTWU of the itemset across all transactions in the database.
-    """
-    RTWU = 0
-    for transaction in dataset:
-        # Check if all items in itemset are present in the transaction
-        if all(item in transaction["items"] for item in itemset):
             RTWU += redefine_transaction_utility(transaction)
     return RTWU
 
@@ -320,7 +306,7 @@ def sort_transactions(transactions: list[dict]) -> list[dict]:
 
     # Create a sorting key that processes the items in reverse order for comparison
     def sort_key(transaction):
-        # Create a tuple of the items in reverse order for ASCII comparison
+        # Create a tuple of the items in reverse orrer for ASCII comparison
         return tuple(reversed(transaction["items"]))
 
     # Sort the transactions based on the created sorting key
@@ -418,6 +404,26 @@ def calculate_utility(itemset: list[str], dataset: list[dict]) -> int:
     return utility
 
 
+def contains_same_characters(E: list, target: str) -> bool:
+    """
+    Checks if a list of strings (E) contains a specific string (target) with the same characters.
+
+    Parameters:
+    E (list): A list of strings.
+    target (str): The string to check for in the list.
+
+    Returns:
+    bool: True if the list contains the target string with the same characters, False otherwise.
+    """
+    target_set = set(target)
+
+    for item in E:
+        if set(item) == target_set:
+            return True
+
+    return False
+
+
 def searchN(
     negative_items: list[str],
     itemset: list[str],
@@ -438,6 +444,9 @@ def searchN(
     for i in negative_items:
         # Step 2: Create a new itemset β by adding the current negative item
         beta = itemset.union({i})
+        beta_str = "".join(sorted(beta))
+        if contains_same_characters(check_list, beta_str):
+            continue
 
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility(beta, sorted_dataset)
@@ -446,8 +455,8 @@ def searchN(
         # Step 4: Check if utility of β is greater than or equal to minU
         if utility_beta >= minU:
             # Step 5: Output the β itemset
-            beta_str = "".join(sorted(beta))
             HUP[beta_str] = utility_beta
+            check_list.append(beta_str)
 
         # Step 7: Calculate RSU(β, z) for all z ∈ η after i
         primary_beta = {z for z in negative_items if rsu(beta, z, D_beta) >= minU}
@@ -480,6 +489,9 @@ def search(
     for i in primary_items:
         # Step 2: Create a new itemset β by adding the current primary item
         beta = set(itemset).union({i})
+        beta_str = "".join(sorted(beta))
+        if contains_same_characters(check_list, beta_str):
+            continue
 
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility(beta, dataset)
@@ -488,8 +500,8 @@ def search(
         # Step 4: Check if utility of β is greater than or equal to minU
         if utility_beta >= minU:
             # Step 5: Output the β itemset
-            beta_str = "".join(sorted(beta))
             HUP[beta_str] = utility_beta
+            check_list.append(beta_str)
 
         # Step 7: If utility of β is greater than minU, proceed with SearchN
         if utility_beta > minU:
@@ -603,7 +615,7 @@ def emhun(dataset: list[dict], minU: int, k):
         print(item, "-", HUP[item])
 
 
-emhun(dataset, minU=600000, k=200000)
+emhun(dataset, minU=60000, k=20)
 
 end_time = time.time()
 

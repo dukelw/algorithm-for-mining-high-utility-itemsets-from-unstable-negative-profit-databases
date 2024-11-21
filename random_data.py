@@ -2,7 +2,7 @@ import random
 
 data = []
 
-with open("chess.txt", "r") as file:
+with open("accident.txt", "r") as file:
     for line in file:
         # Tách các số trong dòng và chuyển đổi chúng thành số nguyên
         numbers = line.split()  # Tách dòng thành danh sách các chuỗi
@@ -26,19 +26,23 @@ with open("chess.txt", "r") as file:
 ratios = [0.4, 0.3, 0.3]  # Tỷ lệ cho nhóm dương, âm, hybrid
 
 
-def create_tid_row(row, ratios, tid):
-    # Tạo các item a-z, A-Z cho danh sách items
+def create_tid_row(row, ratios, tid, n=8):
+    # # Tạo các item a-z, A-Z cho danh sách items
+    # items = []
+    # for i in range(len(row)):
+    #     if i < 26:
+    #         items.append(chr(97 + i))  # Chữ cái thường từ a đến z
+    #     else:
+    #         items.append(chr(65 + (i - 26)))  # Chữ cái hoa từ A đến Z
+    # Tạo các item a-z cho danh sách items
     items = []
-    for i in range(len(row)):
-        if i < 26:
-            items.append(chr(97 + i))  # Chữ cái thường từ a đến z
-        else:
-            items.append(chr(65 + (i - 26)))  # Chữ cái hoa từ A đến Z
+    for i in range(min(len(row), n)):  # Chỉ lấy tối đa 26 phần tử
+        items.append(chr(97 + i))  # Chữ cái thường từ a đến z
 
     # Chia số lượng phần tử cho các nhóm dương, âm, hybrid
-    positive_count = int(len(row) * ratios[0])
-    negative_count = int(len(row) * ratios[1])
-    hybrid_count = len(row) - positive_count - negative_count
+    positive_count = int(min(len(row), n) * ratios[0])
+    negative_count = int(min(len(row), n) * ratios[1])
+    hybrid_count = min(len(row), n) - positive_count - negative_count
 
     positive_profits = row[:positive_count]
     negative_profits = row[positive_count : positive_count + negative_count]
@@ -58,6 +62,10 @@ def create_tid_row(row, ratios, tid):
             new_profits.append(profit if random.choice([True, False]) else -profit)
 
     # Tạo cấu trúc TID
+    if len(quantities) > n:
+        quantities = quantities[:n]
+        new_profits = new_profits[:n]
+
     tid_row = {
         "TID": f"T{tid}",
         "items": items,
@@ -73,7 +81,7 @@ dataset = []
 
 # Tạo TID cho từng dòng dữ liệu
 for index in range(1, len(data)):
-    tid_row = create_tid_row(data[index], ratios, index)
+    tid_row = create_tid_row(data[index], ratios, index, 8)
     dataset.append(tid_row)
 
 with open("data.txt", "w") as outfile:

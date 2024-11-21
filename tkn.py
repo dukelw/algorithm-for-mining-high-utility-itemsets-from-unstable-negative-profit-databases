@@ -14,18 +14,16 @@ TKHQ = []  # Sử dụng danh sách để làm hàng đợi ưu tiên thủ côn
 
 # profits = {"a": 4, "b": 3, "c": 1, "d": -1, "e": 2}
 
-# transactions={
-#     't1': {'a': 2, 'b': 2, 'd': 1, 'e': 3, 'f': 2, 'g': 1},
-#     't2': {'b': 1, 'c': 5},
-#     't3': {'b': 2, 'c': 1, 'd': 3, 'e': 2, 'f': 1},
-#     't4': {'c': 2, 'd': 1, 'e': 3},
-#     't5': {'a': 2, 'f': 3},
-#     't6': {'a': 2, 'b': 1, 'c': 4, 'd': 2, 'e': 1, 'f': 3, 'g': 1},
-#     't7': {'b': 3, 'c': 2, 'e': 2}
-# }
-# profits={
-#     'a': 4, 'b': 3, 'c': 1, 'd': -1, 'e': 2, 'f': -1, 'g': -2
-# }
+transactions = {
+    "t1": {"a": 2, "b": 2, "d": 1, "e": 3, "f": 2, "g": 1},
+    "t2": {"b": 1, "c": 5},
+    "t3": {"b": 2, "c": 1, "d": 3, "e": 2, "f": 1},
+    "t4": {"c": 2, "d": 1, "e": 3},
+    "t5": {"a": 2, "f": 3},
+    "t6": {"a": 2, "b": 1, "c": 4, "d": 2, "e": 1, "f": 3, "g": 1},
+    "t7": {"b": 3, "c": 2, "e": 2},
+}
+profits = {"a": 4, "b": 3, "c": 1, "d": -1, "e": 2, "f": -1, "g": -2}
 
 # transactions = {
 #     "t1": {"a": 2, "b": 3, "d": 1, "h": 1},
@@ -36,7 +34,6 @@ TKHQ = []  # Sử dụng danh sách để làm hàng đợi ưu tiên thủ côn
 # }
 
 # profits = {"a": 2, "b": 1, "d": 3, "h": -1, "c": 1, "e": -1, "f": 5, "g": -1}
-
 
 
 def calculate_priu(transactions, profits):
@@ -651,5 +648,5 @@ def TKN_algorithm(D, k):
     print("Result:", TKHQ[0:k])
 
 
-k = 20
+k = 4
 result = TKN_algorithm(transactions, k)

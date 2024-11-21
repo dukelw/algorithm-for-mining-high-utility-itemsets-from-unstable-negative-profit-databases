@@ -7,7 +7,27 @@ start_time = time.time()
 tracemalloc.start()
 
 
-def read_data(file_name="test.txt"):
+def contains_same_characters(E: list, target: str) -> bool:
+    """
+    Checks if a list of strings (E) contains a specific string (target) with the same characters.
+
+    Parameters:
+    E (list): A list of strings.
+    target (str): The string to check for in the list.
+
+    Returns:
+    bool: True if the list contains the target string with the same characters, False otherwise.
+    """
+    target_set = set(target)
+
+    for item in E:
+        if set(item) == target_set:
+            return True
+
+    return False
+
+
+def read_data(file_name="data.txt"):
     """
     Read and parse the dataset from the given file.
 
@@ -38,9 +58,6 @@ def read_data(file_name="test.txt"):
 
 
 dataset = read_data()
-
-# For unique printing
-printed_itemsets = set()
 
 
 class TransactionInfo:
@@ -331,21 +348,6 @@ def calculate_rtwu(itemset: list[str], dataset: list[dict]) -> int:
     return RTWU
 
 
-def redefine_transaction_weight_utility(itemset: list[str], dataset: list[dict]) -> int:
-    """
-    Calculate the Positive Transaction Weight Utility (RTWU)/Redefined Transaction Weight Utility (RTWU) for an itemset in the dataset.
-    :param itemset: List of items in the itemset.
-    :param dataset: List of transactions.
-    :return: Total PTWU/RTWU of the itemset across all transactions in the database.
-    """
-    RTWU = 0
-    for transaction in dataset:
-        # Check if all items in itemset are present in the transaction
-        if all(item in transaction["items"] for item in itemset):
-            RTWU += redefine_transaction_utility(transaction)
-    return RTWU
-
-
 def redefined_remaining_utility(itemset: list[str], transaction: dict) -> int:
     """
     Calculate the positive remaining utility (pru)/redefined remaining utility (rru) of an itemset in a transaction.
@@ -389,7 +391,7 @@ def categorize_items(dataset: list[dict]) -> tuple[set[str], set[str]]:
     """
     Calculate item utilities and classify items into positive and negative utility sets.
     :param dataset: List of transactions.
-    :return: Tuple of (positive_items, negative_items, mixed_items)
+    :return: Tuple of (positive_items, negative_items)
     """
     item_utilities = {}
     for transaction in dataset:
@@ -753,9 +755,13 @@ def ehmin_mine(
     # Iterate over each Uk in UL
     for Uk in UL.items.values():
         # First pruning condition (U ≥ minUtil)
+        tmp = pref.union({Uk.item_name})
+        if contains_same_characters(check_list, "".join(tmp)):
+            continue
+
         if Uk.utility >= minU:
-            tmp = pref.union({Uk.item_name})
             HUP["".join(tmp)] = Uk.utility
+            check_list.append(tmp)
 
         # Second pruning condition (U + PRU ≥ minUtil)
         if Uk.utility + Uk.pru >= minU:
@@ -865,9 +871,6 @@ def ehmin(k, δ: float):
 
         # Calculate EUCS[v_ik, v_jk] with PTU_k
         eucs = build_eucs(sorted_item)
-        # for line in eucs:
-        #     print(line)
-        # return
 
     print("After 2nd scan", ehmin_list)
 
@@ -881,6 +884,7 @@ def ehmin(k, δ: float):
 # Create an empty EHMINList
 HUP = {}
 ehmin_list = EHMINList()
+check_list = []
 ehmin(20, 0.2)
 
 end_time = time.time()
