@@ -794,77 +794,61 @@ def ehmin(k, δ: float):
     Returns:
         Print all the top K high utility item that greater than or equal threshold
     """
-    # Step 1: 1st Database Scan
-    # Calculate PTWU (RTWU)
     global HUP
+
+    # Step 1: 1st Database Scan
     ptwus, supports = calculate_ptwus(dataset)
-    ptus = {}
-    print("ptwus", ptwus)
-    print("supports", supports)
-    # Calculate PTU (RTU) of each transaction
-    for transaction in dataset:
-        ptu = redefine_transaction_utility(transaction)
-        ptus[transaction["TID"]] = ptu
-    print("ptus", ptus)
-    # Calculate minU
+    ptus = {
+        transaction["TID"]: redefine_transaction_utility(transaction)
+        for transaction in dataset
+    }
     minU = sum(value * δ for value in ptus.values())
-    print("minU", minU)
-    # Get EHMN-list for 1-itemsets
+
     positive_items, negative_items = categorize_items(dataset)
     list_item = {item: ptwu for item, ptwu in ptwus.items() if ptwu >= minU}
     sorted_item = get_items_order(
         list_item, positive_items, negative_items, ptwus, supports
     )
-    print("sorted_item", sorted_item)
-    # Index EHMIN-list sorted item
-    # Calculate utility
+
+    # Initialize EHMIN-list
+    ehmin_list = EHMINList()  # Assuming EHMINList is a predefined class
     for item in sorted_item:
         utility = calculate_utility(item, dataset)
-        # Index EHMIN-list with utility and pru = 0
-        ehmin_item = ehmin_list.find_or_create(item, utility)
-    print("Ehmin", ehmin_list)
+        ehmin_list.find_or_create(item, utility)
 
     # Step 2: 2nd Database Scan
     for transaction in dataset:
-        ptu_k = 0  # Recompute PTU(Tk) and initialize it to 0
-
-        # Step 1: Calculate PTU for each transaction
-        for item in transaction["items"]:
-            # Check PTWU(i) condition for pruning
-            if ptwus[item] > minU:
-                ptu_k += calculate_pu(set(item), transaction, positive_items)
-
-        # Initialize a temporary map
-        tmp = {}
-
-        # # Step 2: Insert items into tmp and calculate PTWU if necessary
-        for item, quantity, profit in zip(
-            transaction["items"], transaction["quantities"], transaction["profit"]
-        ):
-            tmp[item] = quantity * profit  # Store internal utility and external utility
-
-            # PTWU condition to recompute PTWU
-            if ptwus[item] > minU:
-                new_PTWIU = calculate_rtwu(set(item), dataset)
-                ptwus[item] = new_PTWIU + ptu_k
-
-        rutil = 0  # Initialize rutil
-        # Sort to calculate PRU (inportant)
-        tmp_list_item = {item: ptwu for item, ptwu in tmp.items()}
-        tmp = get_items_order(
-            tmp_list_item, positive_items, negative_items, ptwus, supports
+        ptu_k = sum(
+            calculate_pu({item}, transaction, positive_items)
+            for item in transaction["items"]
+            if ptwus[item] > minU
         )
-        tmp = {item: tmp_list_item[item] for item in tmp}
-        # # Process each item in reverse order
-        for item, utility in reversed(list(tmp.items())):
-            # Find or create the item in the EHMIN-list
+
+        tmp = {
+            item: quantity * profit
+            for item, quantity, profit in zip(
+                transaction["items"], transaction["quantities"], transaction["profit"]
+            )
+            if ptwus[item] > minU
+        }
+
+        for item in tmp:
+            ptwus[item] = calculate_rtwu({item}, dataset) + ptu_k
+
+        tmp = {
+            item: tmp[item]
+            for item in get_items_order(
+                tmp, positive_items, negative_items, ptwus, supports
+            )
+        }
+
+        rutil = 0
+        for item, utility in reversed(tmp.items()):
             ehmin_item = ehmin_list.find_or_create(item, utility, pru=0)
-            # Insert values into Ui.Tk vector
             ehmin_item.add_transaction_info(
                 transaction["TID"], utility=utility, pru=rutil
             )
 
-            # Update rutil if U(i) > 0
             if utility > 0:
                 ehmin_list.increase_pru(item, rutil)
                 rutil += utility
@@ -872,13 +856,11 @@ def ehmin(k, δ: float):
     # Calculate EUCS[v_ik, v_jk] with PTU_k
     eucs = build_eucs(sorted_item)
 
-    print("After 2nd scan", ehmin_list)
-
     # Step 3: Mining
     ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
     HUP = dict(sorted(HUP.items(), key=lambda item: item[1], reverse=True)[:k])
-    for item in HUP:
-        print(item, "-", HUP[item])
+    for item, utility in HUP.items():
+        print(f"{item} - {utility}")
 
 
 # Create an empty EHMINList
