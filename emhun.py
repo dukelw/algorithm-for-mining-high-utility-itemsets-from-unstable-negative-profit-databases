@@ -8,7 +8,7 @@ import tracemalloc
 tracemalloc.start()
 
 
-def read_data(file_name="data.txt"):
+def read_data(file_name="connectdata.txt"):
     with open(file_name, "r") as file:
         data = file.read()
 
@@ -444,9 +444,10 @@ def searchN(
     for i in negative_items:
         # Step 2: Create a new itemset β by adding the current negative item
         beta = itemset.union({i})
-        beta_str = "".join(sorted(beta))
-        if contains_same_characters(check_list, beta_str):
-            continue
+        beta_str = "_".join(sorted(beta))
+
+        # if contains_same_characters(check_list, beta_str):
+        #     continue
 
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility(beta, sorted_dataset)
@@ -474,6 +475,7 @@ def search(
     secondary_items: list[str],
     minU: int,
     sorted_dataset: list[str],
+    order,
 ):
     """
     Search for high utility itemsets by appending positive utility items to the given itemset.
@@ -489,9 +491,10 @@ def search(
     for i in primary_items:
         # Step 2: Create a new itemset β by adding the current primary item
         beta = set(itemset).union({i})
-        beta_str = "".join(sorted(beta))
-        if contains_same_characters(check_list, beta_str):
-            continue
+        beta_str = "_".join(sorted(beta))
+
+        # if contains_same_characters(check_list, beta_str):
+        #     continue
 
         # Step 3: Scan the dataset to calculate u(β) and create Dβ
         utility_beta = calculate_utility(beta, dataset)
@@ -510,34 +513,49 @@ def search(
         # Step 10: Calculate RSU(β, z) and RLU(β, z) for all z ∈ Secondary(X)
         primary_beta = set()
         secondary_beta = set()
-        for z in secondary_items:
-            if z == i:
-                continue
-            rsu_value = rsu(beta, z, sorted_dataset)
-            rlu_value = rlu(beta, z, sorted_dataset)
+        try:
+            i_index = secondary_items.index(i)
+            for i in range(i_index + 1, len(secondary_items)):
+                print("secondary_items", secondary_items, "i", i)
+                z = secondary_items[i]
+                rsu_value = rsu(beta, z, sorted_dataset)
+                rlu_value = rlu(beta, z, sorted_dataset)
 
-            # Step 11: Update Primary(β) based on RSU threshold
-            if rsu_value >= minU:
-                primary_beta = primary_beta.union({z})
+                # Step 11: Update Primary(β) based on RSU threshold
+                if rsu_value >= minU:
+                    primary_beta = primary_beta.union({z})
 
-            # Step 12: Update Secondary(β) based on RLU threshold
-            if rlu_value >= minU:
-                secondary_beta = secondary_beta.union({z})
+                # Step 12: Update Secondary(β) based on RLU threshold
+                if rlu_value >= minU:
+                    secondary_beta = secondary_beta.union({z})
 
-        # Step 13: Recursive search call with updated β, dataset Dβ, primary and secondary items
-        search(
-            negative_items,
-            beta,
-            sorted_dataset,
-            primary_beta,
-            secondary_beta,
-            minU,
-            sorted_dataset,
-        )
+                # Step 13: Recursive search call with updated β, dataset Dβ, primary and secondary items
+            sorted_secondary_beta = [item for item in order if item in secondary_beta]
+            search(
+                negative_items,
+                beta,
+                dataset,
+                primary_beta,
+                list(sorted_secondary_beta),
+                minU,
+                sorted_dataset,
+                order,
+            )
+        except ValueError:
+            sorted_secondary_beta = [item for item in order if item in secondary_beta]
+            search(
+                negative_items,
+                beta,
+                dataset,
+                primary_beta,
+                list(sorted_secondary_beta),
+                minU,
+                sorted_dataset,
+                order,
+            )
 
 
-def emhun(dataset: list[dict], minU: int, k):
-    global HUP
+def emhun(dataset: list[dict], minU: int, k: int, HUP: dict):
     """
     Execute the EHHUM algorithm.
     :param dataset: A list of dictionary transaction.
@@ -609,21 +627,34 @@ def emhun(dataset: list[dict], minU: int, k):
     primary = get_items_order(primary, ρ, δ, η)
     print("Primary", primary)
     print("RSU", rsus)
-    search(n, X, dataset, primary, secondary, minU, sorted_dataset)
+    sorted_secondary = get_items_order(secondary, ρ, δ, η)
+    search(
+        n,
+        X,
+        dataset,
+        primary,
+        list(sorted_secondary),
+        minU,
+        sorted_dataset,
+        sorted_secondaryUnionη,
+    )
     HUP = dict(sorted(HUP.items(), key=lambda item: item[1], reverse=True)[:k])
-    for item in HUP:
-        print(item, "-", HUP[item])
+    return HUP
 
 
-emhun(dataset, minU=60000, k=20)
+HUP = emhun(dataset, minU=25, k=20, HUP=HUP)
 
 end_time = time.time()
 
 execution_time = end_time - start_time
-print(f"Execution time: {execution_time:.6f} seconds")
+print()
 
 current, peak = tracemalloc.get_traced_memory()
 
 tracemalloc.stop()
-print(f"Current memory usage: {current / 1024:.2f} KB")
-print(f"Peak memory usage: {peak / 1024:.2f} KB")
+with open("emhun_result.txt", "w") as outputfile:
+    for item in HUP:
+        outputfile.write(f"{item} - {HUP[item]}\n")
+    outputfile.write(f"Execution time: {execution_time:.6f} seconds\n")
+    outputfile.write(f"Current memory usage: {current / 1024:.2f} KB\n")
+    outputfile.write(f"Peak memory usage: {peak / 1024:.2f} KB\n")

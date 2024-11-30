@@ -1,0 +1,11 @@
+d_e - 37
+c_d_e - 37
+b_d_e - 31
+c_d - 31
+d - 28
+b_c_d_e - 27
+b_d_e_f - 25
+b_d - 25
+Execution time: 0.044561 seconds
+Current memory usage: 22.19 KB
+Peak memory usage: 148.72 KB

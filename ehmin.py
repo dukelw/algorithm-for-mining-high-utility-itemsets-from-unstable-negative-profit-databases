@@ -27,7 +27,7 @@ def contains_same_characters(E: list, target: str) -> bool:
     return False
 
 
-def read_data(file_name="data.txt"):
+def read_data(file_name="ehmintable.txt"):
     """
     Read and parse the dataset from the given file.
 
@@ -756,8 +756,6 @@ def ehmin_mine(
     for Uk in UL.items.values():
         # First pruning condition (U ≥ minUtil)
         tmp = pref.union({Uk.item_name})
-        if contains_same_characters(check_list, "".join(tmp)):
-            continue
 
         if Uk.utility >= minU:
             HUP["".join(tmp)] = Uk.utility
@@ -877,8 +875,6 @@ def ehmin(k, δ: float):
     # Step 3: Mining
     ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
     HUP = dict(sorted(HUP.items(), key=lambda item: item[1], reverse=True)[:k])
-    for item in HUP:
-        print(item, "-", HUP[item])
 
 
 # Create an empty EHMINList
@@ -890,10 +886,7 @@ ehmin(20, 0.2)
 end_time = time.time()
 
 execution_time = end_time - start_time
-print(f"Execution time: {execution_time:.6f} seconds")
 
 current, peak = tracemalloc.get_traced_memory()
 
 tracemalloc.stop()
-print(f"Current memory usage: {current / 1024:.2f} KB")
-print(f"Peak memory usage: {peak / 1024:.2f} KB")

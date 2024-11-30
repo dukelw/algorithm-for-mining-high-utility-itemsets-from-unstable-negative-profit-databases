@@ -16,7 +16,7 @@ def get_dataset() -> list:
         - List of profits (list of integers)
     """
     data = []
-    with open("gendb.txt", "r", encoding="utf-8") as dataset:
+    with open("3rddataset.txt", "r", encoding="utf-8") as dataset:
         next(dataset)  # Skip the header line
         for line in dataset:
             parts = line.split()
@@ -504,6 +504,6 @@ def tournament_selection(P: set, k: int, n: int) -> list:
     return B
 
 
-E = TKHUIM_GA(dataset, 7, 9, 5)
+E = TKHUIM_GA(dataset, 4, 5, 4)
 for item in E:
     print(item, "-", E[item])

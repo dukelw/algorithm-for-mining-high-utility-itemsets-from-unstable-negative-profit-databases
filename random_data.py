@@ -1,96 +1,79 @@
 import random
 
-data = []
 
-with open("accident.txt", "r") as file:
-    for line in file:
-        # Tách các số trong dòng và chuyển đổi chúng thành số nguyên
-        numbers = line.split()  # Tách dòng thành danh sách các chuỗi
+def generate_tid_data(ratios, number_items, input_file="chess.txt"):
+    data = []
+    output_file = input_file.split(".")[0] + "data.txt"
+    # Danh sách full_items
+    full_items = [f"{i}" for i in range(0, number_items)]
 
-        # Tạo danh sách cho các số trong dòng hiện tại
-        row_data = []
-        for num in numbers:
-            try:
-                row_data.append(
-                    int(num)
-                )  # Chuyển đổi chuỗi thành số nguyên và thêm vào danh sách
-            except ValueError:
-                # Bỏ qua các giá trị không hợp lệ
-                print(f"Đã bỏ qua giá trị không hợp lệ: {num}")
+    # Tính số lượng items cho từng nhóm
+    total_items = len(full_items)
+    positive_count = int(total_items * ratios[0])
 
-        # Thêm danh sách số vào data
-        data.append(row_data)
+    # Shuffle items trước khi phân chia
+    full_items_original = full_items[:]
+    random.shuffle(full_items)
 
+    # Phân chia
+    positive_items = full_items[:positive_count]
+    negative_items = full_items[positive_count:]
 
-# Tỷ lệ phân chia nhóm
-ratios = [0.4, 0.3, 0.3]  # Tỷ lệ cho nhóm dương, âm, hybrid
+    profits = [random.randint(1, 5) for _ in range(0, total_items)]
 
+    # Gán giá trị âm cho nhóm negative items
+    for idx, item in enumerate(full_items_original):
+        if item in negative_items:
+            profits[idx] *= -1
 
-def create_tid_row(row, ratios, tid, n=8):
-    # # Tạo các item a-z, A-Z cho danh sách items
-    # items = []
-    # for i in range(len(row)):
-    #     if i < 26:
-    #         items.append(chr(97 + i))  # Chữ cái thường từ a đến z
-    #     else:
-    #         items.append(chr(65 + (i - 26)))  # Chữ cái hoa từ A đến Z
-    # Tạo các item a-z cho danh sách items
-    items = []
-    for i in range(min(len(row), n)):  # Chỉ lấy tối đa 26 phần tử
-        items.append(chr(97 + i))  # Chữ cái thường từ a đến z
+    # Đọc file đầu vào
+    with open(input_file, "r") as file:
+        for line in file:
+            numbers = line.split()
 
-    # Chia số lượng phần tử cho các nhóm dương, âm, hybrid
-    positive_count = int(min(len(row), n) * ratios[0])
-    negative_count = int(min(len(row), n) * ratios[1])
-    hybrid_count = min(len(row), n) - positive_count - negative_count
+            row_data = []
+            for num in numbers:
+                try:
+                    row_data.append(int(num))
+                except ValueError:
+                    print(f"Đã bỏ qua giá trị không hợp lệ: {num}")
 
-    positive_profits = row[:positive_count]
-    negative_profits = row[positive_count : positive_count + negative_count]
-    hybrid_profits = row[positive_count + negative_count :]
+            data.append(row_data)
 
-    # Áp dụng quy tắc dương, âm, hybrid
-    new_profits = []
-    quantities = []
-    for profit in row:
-        quantities.append(random.randint(1, 10))
-        if profit in positive_profits:
-            new_profits.append(profit)  # Giữ nguyên giá trị dương
-        elif profit in negative_profits:
-            new_profits.append(-int(profit))  # Chuyển sang âm
-        elif profit in hybrid_profits:
-            # Áp dụng cờ ngẫu nhiên để xác định dương hoặc âm
-            new_profits.append(profit if random.choice([True, False]) else -profit)
+    def create_tid_row(row, tid):
+        new_profits = []
+        quantities = [random.randint(1, 4) for _ in range(len(row))]
+        items = []
+        for item in row:
+            items.append(full_items_original[item])
+            new_profits.append(profits[item])
 
-    # Tạo cấu trúc TID
-    if len(quantities) > n:
-        quantities = quantities[:n]
-        new_profits = new_profits[:n]
+        return {
+            "TID": f"T{tid}",
+            "items": items,
+            "quantities": quantities,
+            "profit": new_profits,
+        }
 
-    tid_row = {
-        "TID": f"T{tid}",
-        "items": items,
-        "quantities": quantities,
-        "profit": new_profits,
-    }
+    # Tạo dataset
+    dataset = []
+    for index in range(1, len(data)):
+        tid_row = create_tid_row(data[index], index)
+        dataset.append(tid_row)
 
-    return tid_row
+    # Ghi kết quả ra file
+    with open(output_file, "w") as outfile:
+        outfile.write("[")
+        outfile.write(", ".join(map(str, dataset)))
+        outfile.write("]")
+
+    return dataset, positive_items, negative_items
 
 
-# Khởi tạo danh sách để lưu các TID
-dataset = []
+# Ví dụ sử dụng
+ratios = [0.3, 0.7]  # Tỷ lệ dương và âm
+dataset, positive_items, negative_items = generate_tid_data(ratios, 130, "connect.txt")
 
-# Tạo TID cho từng dòng dữ liệu
-for index in range(1, len(data)):
-    tid_row = create_tid_row(data[index], ratios, index, 8)
-    dataset.append(tid_row)
-
-with open("data.txt", "w") as outfile:
-    outfile.write("[")  # Mở đầu danh sách
-    outfile.write(
-        ", ".join(map(str, dataset))
-    )  # Ghi các phần tử cách nhau bằng dấu phẩy
-    outfile.write("]")  # Kết thúc danh sách
-
-
-# In kết quả để kiểm tra
-print(dataset)
+print("Positive Items:", positive_items)
+print("Negative Items:", negative_items)
+print("Dataset:", dataset)

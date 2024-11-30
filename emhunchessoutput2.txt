@@ -1,0 +1,23 @@
+b_c_e_g - 135854
+c_e_g - 120000
+a_b_c_e_g - 112016
+b_c_e_g_h - 111944
+b_c_e_g_i - 111800
+b_c_e_g_j - 103874
+b_c_e - 96339
+a_c_e_g - 96162
+c_e_g_h - 96090
+b_c_e_f_g - 96039
+c_e_g_i - 95946
+b_c_d_e_g - 95814
+b_c_g - 95754
+b_e_g - 95469
+c_e_g_j - 88020
+c_e - 80485
+c_e_f_g - 80185
+c_d_e_g - 79960
+c_g - 79900
+e_g - 79615
+Execution time: 8.351031 seconds
+Current memory usage: 2254.34 KB
+Peak memory usage: 109651.75 KB

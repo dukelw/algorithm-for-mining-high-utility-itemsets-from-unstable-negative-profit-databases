@@ -1,0 +1,23 @@
+b_d - 31
+b_c_f_d - 22
+e_b_d - 21
+h_b_d - 20
+b_f_d_e_c - 19
+c_f_b - 19
+b_f_d - 19
+c_a - 19
+b_a - 18
+d - 18
+c_f_d - 16
+e_c_f_b - 16
+e_b_f_d - 16
+b_f - 16
+a - 16
+b - 16
+c_b - 15
+c_a_b - 14
+g_b_d - 14
+e_h_b_d - 14
+Execution time: 0.010511 seconds
+Current memory usage: 34.19 KB
+Peak memory usage: 114.22 KB

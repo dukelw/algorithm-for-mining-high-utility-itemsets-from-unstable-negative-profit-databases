@@ -27,7 +27,7 @@ def contains_same_characters(E: list, target: str) -> bool:
     return False
 
 
-def read_data(file_name="data.txt"):
+def read_data(file_name="retaildata.txt"):
     """
     Read and parse the dataset from the given file.
 
@@ -756,11 +756,9 @@ def ehmin_mine(
     for Uk in UL.items.values():
         # First pruning condition (U ≥ minUtil)
         tmp = pref.union({Uk.item_name})
-        if contains_same_characters(check_list, "".join(tmp)):
-            continue
 
         if Uk.utility >= minU:
-            HUP["".join(tmp)] = Uk.utility
+            HUP["_".join(tmp)] = Uk.utility
             check_list.append(tmp)
 
         # Second pruning condition (U + PRU ≥ minUtil)
@@ -784,7 +782,7 @@ def ehmin_mine(
                 ehmin_mine(Uk, CL, pref | {Uk.item_name}, eucs, minU, sorted_item)
 
 
-def ehmin(k, δ: float):
+def ehmin(k: int, δ: float, HUP: dict):
     """Using for execute EHMIN Algorithm finding top K high utility
 
     Args:
@@ -794,7 +792,6 @@ def ehmin(k, δ: float):
     Returns:
         Print all the top K high utility item that greater than or equal threshold
     """
-    global HUP
 
     # Step 1: 1st Database Scan
     ptwus, supports = calculate_ptwus(dataset)
@@ -803,6 +800,7 @@ def ehmin(k, δ: float):
         for transaction in dataset
     }
     minU = sum(value * δ for value in ptus.values())
+    print("minU: ", minU)
 
     positive_items, negative_items = categorize_items(dataset)
     list_item = {item: ptwu for item, ptwu in ptwus.items() if ptwu >= minU}
@@ -816,6 +814,7 @@ def ehmin(k, δ: float):
         utility = calculate_utility(item, dataset)
         ehmin_list.find_or_create(item, utility)
 
+    print("Scan 2nd dataset...")
     # Step 2: 2nd Database Scan
     for transaction in dataset:
         ptu_k = sum(
@@ -853,29 +852,38 @@ def ehmin(k, δ: float):
                 ehmin_list.increase_pru(item, rutil)
                 rutil += utility
 
+    end_scanning_time = time.time()
+
+    scanning_time = end_scanning_time - start_time
+    print("EHMIN 2nd", ehmin_list)
+    print(f"Scanning time: {scanning_time:.6f}  seconds")
     # Calculate EUCS[v_ik, v_jk] with PTU_k
     eucs = build_eucs(sorted_item)
 
     # Step 3: Mining
     ehmin_mine(EHMINItem(), ehmin_list, set(), eucs, minU, sorted_item)
     HUP = dict(sorted(HUP.items(), key=lambda item: item[1], reverse=True)[:k])
-    for item, utility in HUP.items():
-        print(f"{item} - {utility}")
+    return HUP
 
 
 # Create an empty EHMINList
 HUP = {}
 ehmin_list = EHMINList()
 check_list = []
-ehmin(20, 0.2)
+
+HUP = ehmin(20, 0.2, HUP=HUP)
 
 end_time = time.time()
 
 execution_time = end_time - start_time
-print(f"Execution time: {execution_time:.6f} seconds")
 
 current, peak = tracemalloc.get_traced_memory()
 
 tracemalloc.stop()
-print(f"Current memory usage: {current / 1024:.2f} KB")
-print(f"Peak memory usage: {peak / 1024:.2f} KB")
+
+with open("ehminchessoutput.txt", "w") as outputfile:
+    for item in HUP:
+        outputfile.write(f"{item} - {HUP[item]}\n")
+    outputfile.write(f"Execution time: {execution_time:.6f} seconds\n")
+    outputfile.write(f"Current memory usage: {current / 1024:.2f} KB\n")
+    outputfile.write(f"Peak memory usage: {peak / 1024:.2f} KB\n")
