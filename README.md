@@ -1,4 +1,4 @@
-# EHMIN Algorithm
+# Test these Algorithms
 
 ## How to Run
 
@@ -21,3 +21,4 @@ To run EMHUN, navigate to the `emhun.py` file and execute:
 py emhun.py
 ```
 
+To run other algorithm, do the similar step with their name.
